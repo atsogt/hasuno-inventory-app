@@ -1,0 +1,14 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(256,300)" stroke="#14161A" stroke-width="12" stroke-linejoin="round" stroke-linecap="round" fill="#C9A24B">
+    <!-- center petal -->
+    <path d="M0,-150 C34,-96 46,-40 46,10 C46,52 24,78 0,78 C-24,78 -46,52 -46,10 C-46,-40 -34,-96 0,-150 Z"/>
+    <!-- inner left petal -->
+    <path d="M-8,-6 C-58,-44 -104,-58 -150,-56 C-150,-2 -120,42 -70,64 C-40,77 -12,74 2,58 C14,40 8,14 -8,-6 Z"/>
+    <!-- inner right petal -->
+    <path d="M8,-6 C58,-44 104,-58 150,-56 C150,-2 120,42 70,64 C40,77 12,74 -2,58 C-14,40 -8,14 8,-6 Z"/>
+    <!-- outer left petal -->
+    <path d="M-20,34 C-92,20 -150,30 -196,58 C-166,104 -108,128 -50,120 C-16,115 8,96 10,70 C11,50 0,40 -20,34 Z"/>
+    <!-- outer right petal -->
+    <path d="M20,34 C92,20 150,30 196,58 C166,104 108,128 50,120 C16,115 -8,96 -10,70 C-11,50 0,40 20,34 Z"/>
+  </g>
+</svg>

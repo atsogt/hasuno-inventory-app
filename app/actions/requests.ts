@@ -1,0 +1,114 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { createClient } from "@/lib/supabase/server";
+import { requireProfile } from "@/lib/auth";
+
+export async function submitRequest(itemName: string, amount: number | null) {
+  const profile = await requireProfile();
+  const name = itemName.trim();
+  if (!name) return { error: "Pick or type an item." };
+
+  const supabase = createClient();
+  const { error } = await supabase.from("requests").insert({
+    item_name: name,
+    amount: amount && amount > 0 ? amount : null,
+    requested_by_id: profile.id,
+    requested_by_name: profile.name,
+    sent_at: new Date().toISOString(),
+  });
+  if (error) return { error: error.message };
+
+  revalidatePath("/request");
+  revalidatePath("/my-requests");
+  revalidatePath("/requests");
+  return { ok: true, label: name + (amount ? ` ×${amount}` : "") };
+}
+
+export async function deleteRequest(id: string) {
+  await requireProfile();
+  const supabase = createClient();
+  const { error } = await supabase.from("requests").delete().eq("id", id);
+  if (error) return { error: error.message };
+
+  revalidatePath("/my-requests");
+  revalidatePath("/requests");
+  return { ok: true };
+}
+
+export async function setRequestReminder(id: string, iso: string) {
+  await requireProfile();
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("requests")
+    .update({ reminder_at: iso, reminder_notified: false })
+    .eq("id", id);
+  if (error) return { error: error.message };
+
+  revalidatePath("/my-requests");
+  return { ok: true };
+}
+
+export async function clearRequestReminder(id: string) {
+  await requireProfile();
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("requests")
+    .update({ reminder_at: null, reminder_notified: false })
+    .eq("id", id);
+  if (error) return { error: error.message };
+
+  revalidatePath("/my-requests");
+  return { ok: true };
+}
+
+export async function addItemToCatalog(name: string, amount: number) {
+  const profile = await requireProfile();
+  if (profile.role === "worker") return { error: "Not allowed." };
+  const trimmed = name.trim();
+  if (!trimmed) return { error: "Item needs a name." };
+
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("items")
+    .insert({ name: trimmed, amount: amount > 0 ? amount : 1 });
+  if (error) {
+    if (error.code === "23505") return { error: `"${trimmed}" is already on the list` };
+    return { error: error.message };
+  }
+
+  revalidatePath("/request");
+  return { ok: true };
+}
+
+export async function saveItemEdit(id: string, name: string, amount: number) {
+  const profile = await requireProfile();
+  if (profile.role === "worker") return { error: "Not allowed." };
+  const trimmed = name.trim();
+  if (!trimmed) return { error: "Item needs a name." };
+
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("items")
+    .update({ name: trimmed, amount: amount > 0 ? amount : 1 })
+    .eq("id", id);
+  if (error) {
+    if (error.code === "23505") return { error: "Another item already has that name" };
+    return { error: error.message };
+  }
+
+  revalidatePath("/request");
+  return { ok: true };
+}
+
+export async function removeItemFromCatalog(id: string) {
+  const profile = await requireProfile();
+  if (profile.role === "worker") return { error: "Not allowed." };
+
+  const supabase = createClient();
+  const { error } = await supabase.from("items").delete().eq("id", id);
+  if (error) return { error: error.message };
+
+  revalidatePath("/request");
+  return { ok: true };
+}

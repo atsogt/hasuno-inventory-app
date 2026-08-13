@@ -1,0 +1,55 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #f6f1e6;
+  color: #1c2b2a;
+  height: 100%;
+}
+
+@layer components {
+  .chit {
+    @apply relative bg-card border border-line rounded-chit px-4 py-3.5 mb-4;
+    box-shadow: 0 1px 0 #d9ceb4;
+  }
+  .chit::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -1px;
+    height: 6px;
+    background-image: radial-gradient(circle at 6px 0, transparent 5px, #f6f1e6 5.5px);
+    background-size: 12px 12px;
+    background-repeat: repeat-x;
+    background-position: 0 -3px;
+  }
+  .btn {
+    @apply border-none rounded-[10px] px-4 py-3 font-bold text-[14.5px] disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply bg-ink text-paper active:bg-ink-soft;
+  }
+  .btn-accent {
+    @apply bg-accent text-white active:bg-accent-dim;
+  }
+  .btn-ghost {
+    @apply bg-transparent text-ink border border-line;
+  }
+  .field-label {
+    @apply text-[11px] uppercase tracking-wider text-ink-soft font-mono block mb-1.5;
+  }
+  .field-input {
+    @apply w-full px-3.5 py-3 rounded-[10px] border border-line bg-card font-mono text-sm text-ink focus:outline-2 focus:outline-ink;
+  }
+}
