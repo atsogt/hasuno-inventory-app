@@ -104,9 +104,19 @@ body {
 }
 
 /* Full-width scrim behind page content: separates the fixed background photo
-   from foreground content. Edges fade to the photo instead of a hard border,
-   so it reads as a soft island rather than a bounded card. */
+   from foreground content. The tint/blur/fade all live on ::before, a layer
+   strictly behind the container's own normal-flow children (see the isolated
+   stacking context + negative z-index below) — so content itself (chits,
+   fields, buttons) stays fully crisp and never fades, only the backdrop does. */
 .content-scrim {
+  position: relative;
+  isolation: isolate;
+}
+.content-scrim::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
   background: var(--glass-fill);
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
   backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
@@ -114,12 +124,12 @@ body {
   outline: 1px solid var(--glass-edge);
   outline-offset: -1px;
   -webkit-mask-image:
-    linear-gradient(to right, transparent, black 56px, black calc(100% - 56px), transparent),
-    linear-gradient(to bottom, transparent, black 36px, black calc(100% - 36px), transparent);
+    linear-gradient(to right, rgba(0 0 0 / 0.35), black 84px, black calc(100% - 84px), rgba(0 0 0 / 0.35)),
+    linear-gradient(to bottom, rgba(0 0 0 / 0.35), black 56px, black calc(100% - 56px), rgba(0 0 0 / 0.35));
   -webkit-mask-composite: source-in;
   mask-image:
-    linear-gradient(to right, transparent, black 56px, black calc(100% - 56px), transparent),
-    linear-gradient(to bottom, transparent, black 36px, black calc(100% - 36px), transparent);
+    linear-gradient(to right, rgba(0 0 0 / 0.35), black 84px, black calc(100% - 84px), rgba(0 0 0 / 0.35)),
+    linear-gradient(to bottom, rgba(0 0 0 / 0.35), black 56px, black calc(100% - 56px), rgba(0 0 0 / 0.35));
   mask-composite: intersect;
 }
 
