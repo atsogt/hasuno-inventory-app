@@ -1,6 +1,6 @@
 import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import GroupedRequestList from "@/components/GroupedRequestList";
+import RequestList from "@/components/RequestList";
 import RealtimeRefresh from "@/components/RealtimeRefresh";
 import type { Request } from "@/lib/types";
 
@@ -18,7 +18,11 @@ export default async function RequestsPage() {
       <h2 className="font-mono text-xs uppercase tracking-widest text-ink-soft mb-3.5 flex items-center gap-2 after:content-[''] after:flex-1 after:h-px after:bg-line">
         Open Requests ({requests?.length || 0})
       </h2>
-      <GroupedRequestList requests={(requests || []) as Request[]} />
+      <RequestList
+        requests={(requests || []) as Request[]}
+        showRequester
+        allowDeleteAll
+      />
     </>
   );
 }
