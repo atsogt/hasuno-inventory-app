@@ -12,8 +12,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#F6F1E6" },
-    { media: "(prefers-color-scheme: dark)", color: "#131918" },
+    { media: "(prefers-color-scheme: light)", color: "#EEF4F1" },
+    { media: "(prefers-color-scheme: dark)", color: "#0E1513" },
   ],
 };
 
@@ -34,7 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
       <body>
-        <div className="starfield" aria-hidden="true" />
+        <div className="aurora" aria-hidden="true" />
         <div className="max-w-[480px] mx-auto min-h-screen flex flex-col relative">
           {children}
         </div>

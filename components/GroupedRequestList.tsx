@@ -122,7 +122,7 @@ function EditRow({ request, label }: { request: Request; label: string }) {
           <label className="flex items-center gap-2 text-[13.5px]">
             <input
               type="checkbox"
-              className="accent-accent"
+              className="accent-urgent"
               checked={urgentInput}
               onChange={(e) => setUrgentInput(e.target.checked)}
             />
@@ -135,18 +135,14 @@ function EditRow({ request, label }: { request: Request; label: string }) {
 }
 
 function UrgentBadge() {
-  return (
-    <span className="font-mono text-[9.5px] font-bold uppercase tracking-wide text-white bg-accent px-1.5 py-0.5 rounded-full">
-      Urgent
-    </span>
-  );
+  return <span className="badge-urgent">Urgent</span>;
 }
 
 function ItemCard({ entry }: { entry: ItemEntry }) {
   const single = entry.rows.length === 1;
 
   return (
-    <div className={`chit ${entry.anyUrgent ? "border-accent ring-1 ring-accent" : ""}`}>
+    <div className={`chit ${entry.anyUrgent ? "chit-urgent" : ""}`}>
       <div className="flex justify-between items-start gap-2.5">
         <div className="font-bold text-[16px] flex items-center gap-1.5 flex-wrap">
           {entry.itemName}

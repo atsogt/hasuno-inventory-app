@@ -59,4 +59,4 @@ Open items:
 
 ## Design system (keep consistent)
 
-Fonts: Zen Kaku Gothic New (display/body), IBM Plex Mono (labels/data). Palette: ink `#1C2B2A`, paper `#F6F1E6`, card `#FBF8F1`, line `#D9CEB4`, accent `#B23A2E`, gold logo `#C9A24B`. Requests render as kitchen "chit"/ticket cards; restrained accent use.
+Fonts: Zen Kaku Gothic New (display/body), IBM Plex Mono (labels/data). The original ink/paper/red-accent palette from the prototype was superseded by the "Hasuno Glass" theme: a frosted-glass system (blurred, translucent panels over an aurora background) with a teal identity accent (`#37c8a0`) and a dedicated red `--urgent` token reserved exclusively for urgent requests and destructive actions — never used for brand/identity. Requests still render as "chit" ticket cards.

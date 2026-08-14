@@ -19,11 +19,11 @@ export default function Modal({
 }) {
   return (
     <div
-      className="fixed inset-0 bg-black/50 flex items-end justify-center z-20"
+      className="modal-scrim fixed inset-0 flex items-end justify-center z-20"
       onClick={onCancel}
     >
       <div
-        className="bg-paper w-full max-w-[480px] rounded-t-2xl p-6 shadow-2xl"
+        className="modal-sheet w-full max-w-[480px] p-6"
         style={{ paddingBottom: "calc(22px + env(safe-area-inset-bottom))" }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -34,7 +34,7 @@ export default function Modal({
             Cancel
           </button>
           <button
-            className={`btn flex-1 ${danger ? "btn-accent" : "btn-primary"}`}
+            className={`btn flex-1 ${danger ? "btn-danger" : "btn-primary"}`}
             onClick={onConfirm}
             type="button"
             disabled={confirmDisabled}

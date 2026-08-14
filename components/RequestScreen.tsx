@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import Modal from "@/components/Modal";
-import GlassBackdrop from "@/components/GlassBackdrop";
 import { useToast } from "@/components/Toast";
 import {
   submitRequest,
@@ -198,7 +197,6 @@ export default function RequestScreen({
 
   return (
     <>
-      <GlassBackdrop />
       {visibleReminders.map((r) => (
         <div
           key={r.id}
@@ -302,7 +300,7 @@ export default function RequestScreen({
         onClick={() => setQuickAddOpen(true)}
         aria-label="Quick add"
         style={{ right: FAB_RIGHT }}
-        className="fixed bottom-24 z-10 w-14 h-14 rounded-full bg-accent text-white text-3xl leading-none font-light flex items-center justify-center shadow-[0_6px_20px_rgba(178,58,46,0.4)] border-2 border-paper transition-transform hover:scale-105 hover:rotate-90 active:scale-95 motion-reduce:transition-none motion-reduce:hover:rotate-0"
+        className="fixed bottom-24 z-10 w-14 h-14 rounded-full bg-accent-deep text-white text-3xl leading-none font-light flex items-center justify-center shadow-[0_6px_20px_rgba(21,122,94,0.4)] border-2 border-paper transition-transform hover:scale-105 hover:rotate-90 active:scale-95 motion-reduce:transition-none motion-reduce:hover:rotate-0"
       >
         <span className="-translate-y-[1px]">+</span>
       </button>
@@ -450,7 +448,7 @@ export default function RequestScreen({
             </datalist>
           </div>
           <button
-            className="font-mono text-[11px] text-accent underline"
+            className="font-mono text-[11px] text-urgent underline"
             onClick={() => setConfirmDelete(editing)}
             type="button"
           >
@@ -484,7 +482,7 @@ export default function RequestScreen({
           <label className="flex items-center gap-2 text-[13.5px]">
             <input
               type="checkbox"
-              className="accent-accent"
+              className="accent-urgent"
               checked={dupUrgent}
               onChange={(e) => setDupUrgent(e.target.checked)}
             />

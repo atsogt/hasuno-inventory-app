@@ -20,7 +20,7 @@ export default function Tabbar({ role, requestsBadge }: { role: Role; requestsBa
 
   return (
     <div
-      className="sticky bottom-0 flex border-t border-line bg-paper px-3 pt-2 gap-2 z-10"
+      className="tabbar-glass sticky bottom-0 flex border-t px-3 pt-2 gap-2 z-10"
       style={{ paddingBottom: "calc(10px + env(safe-area-inset-bottom))" }}
     >
       {tabs.map((t) => {
@@ -30,7 +30,7 @@ export default function Tabbar({ role, requestsBadge }: { role: Role; requestsBa
             key={t.href}
             href={t.href}
             className={`flex-1 py-2 px-1 rounded-[10px] font-mono text-[11px] tracking-wide uppercase flex flex-col items-center gap-1 ${
-              active ? "text-ink bg-paper-dim font-semibold" : "text-ink-soft"
+              active ? "tab-active font-semibold" : "text-ink-soft"
             }`}
           >
             {t.label}

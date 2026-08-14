@@ -18,6 +18,8 @@ const config: Config = {
         line: withOpacity("--line"),
         accent: withOpacity("--accent"),
         "accent-dim": withOpacity("--accent-dim"),
+        "accent-deep": withOpacity("--accent-deep"),
+        urgent: withOpacity("--urgent"),
         success: withOpacity("--success"),
         warn: withOpacity("--warn"),
         gold: withOpacity("--gold"),

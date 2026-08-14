@@ -49,7 +49,7 @@ export default function LoginPage() {
         <button className="btn btn-primary w-full" type="submit" disabled={isPending}>
           {isPending ? "Signing in…" : "Sign in"}
         </button>
-        {error && <p className="text-accent text-[12.5px] font-mono mt-2.5 text-center">{error}</p>}
+        {error && <p className="text-urgent text-[12.5px] font-mono mt-2.5 text-center">{error}</p>}
       </form>
     </div>
   );

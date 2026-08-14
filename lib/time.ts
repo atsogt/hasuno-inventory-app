@@ -26,5 +26,5 @@ export function elapsedInfo(iso: string) {
 export const elapsedClassMap = {
   "elapsed-fresh": "bg-success/10 text-success",
   "elapsed-warn": "bg-warn/10 text-warn",
-  "elapsed-stale": "bg-accent/10 text-accent",
+  "elapsed-stale": "bg-urgent/10 text-urgent",
 } as const;

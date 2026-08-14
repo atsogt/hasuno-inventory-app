@@ -22,7 +22,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     <ToastContext.Provider value={show}>
       {children}
       {message && (
-        <div className="fixed top-3.5 left-1/2 -translate-x-1/2 bg-ink text-paper px-5 py-2.5 rounded-full font-mono text-[12.5px] z-30 shadow-lg">
+        <div className="toast-glass fixed top-3.5 left-1/2 -translate-x-1/2 px-5 py-2.5 rounded-full font-mono text-[12.5px] z-30">
           {message}
         </div>
       )}

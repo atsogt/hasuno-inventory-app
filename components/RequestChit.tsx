@@ -82,7 +82,7 @@ export default function RequestChit({
 
   return (
     <>
-      <div className={`chit ${request.urgent ? "border-accent ring-1 ring-accent" : reminderDue ? "border-accent ring-1 ring-accent" : ""}`}>
+      <div className={`chit ${request.urgent || reminderDue ? "chit-urgent" : ""}`}>
         <div className="flex justify-between items-start gap-2.5">
           <div>
             <div className="font-bold text-[16px] flex items-center gap-1.5 flex-wrap">
@@ -90,11 +90,7 @@ export default function RequestChit({
               {request.amount ? (
                 <span className="font-mono text-xs font-medium text-ink-soft">×{request.amount}</span>
               ) : null}
-              {request.urgent && (
-                <span className="font-mono text-[9.5px] font-bold uppercase tracking-wide text-white bg-accent px-1.5 py-0.5 rounded-full">
-                  Urgent
-                </span>
-              )}
+              {request.urgent && <span className="badge-urgent">Urgent</span>}
             </div>
             <div className="font-mono text-[11px] text-ink-soft mt-1 leading-relaxed">
               {fmtDate(request.sent_at)}
@@ -107,7 +103,7 @@ export default function RequestChit({
           {showReminderControls ? (
             request.reminder_at ? (
               <div
-                className={`font-mono text-[11px] flex items-center gap-1.5 ${reminderDue ? "text-accent font-semibold" : "text-warn"}`}
+                className={`font-mono text-[11px] flex items-center gap-1.5 ${reminderDue ? "text-urgent font-semibold" : "text-warn"}`}
               >
                 ⏰ {reminderDue ? "Reminder due" : "Reminder " + fmtDate(request.reminder_at)}
                 <button
@@ -176,7 +172,7 @@ export default function RequestChit({
           <label className="flex items-center gap-2 text-[13.5px]">
             <input
               type="checkbox"
-              className="accent-accent"
+              className="accent-urgent"
               checked={urgentInput}
               onChange={(e) => setUrgentInput(e.target.checked)}
             />

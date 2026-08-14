@@ -9,7 +9,7 @@ import type { Profile } from "@/lib/types";
 
 const ROLE_STYLE: Record<Profile["role"], string> = {
   owner: "bg-ink text-paper",
-  manager: "bg-accent text-white",
+  manager: "bg-accent-deep text-white",
   worker: "bg-paper-dim text-ink-soft",
 };
 
@@ -66,7 +66,7 @@ export default function ManageAccountsPanel({
           return (
             <div
               key={a.id}
-              className={`bg-card border rounded-xl px-5 py-4 ${a.locked ? "border-accent/40" : "border-line"}`}
+              className={`bg-card border rounded-xl px-5 py-4 ${a.locked ? "border-warn/50" : "border-line"}`}
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
@@ -92,7 +92,7 @@ export default function ManageAccountsPanel({
                   </div>
                 </div>
                 {a.locked && (
-                  <span className="font-mono text-[10px] text-accent shrink-0">locked</span>
+                  <span className="font-mono text-[10px] text-warn shrink-0">locked</span>
                 )}
               </div>
               {manageable && (
@@ -103,7 +103,7 @@ export default function ManageAccountsPanel({
                   <button className="flex-1 bg-paper-dim border border-line rounded-lg py-2 font-mono text-[11px]" onClick={() => handleToggleLock(a)} type="button">
                     {a.locked ? "Unlock" : "Lock"}
                   </button>
-                  <button className="flex-1 bg-paper-dim border border-line rounded-lg py-2 font-mono text-[11px] text-accent" onClick={() => setDeleting(a)} type="button">
+                  <button className="flex-1 bg-paper-dim border border-line rounded-lg py-2 font-mono text-[11px] text-urgent" onClick={() => setDeleting(a)} type="button">
                     Delete
                   </button>
                 </div>
