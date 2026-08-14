@@ -1,17 +1,21 @@
 # Hasuno Inventory Requests
 
-Next.js + Supabase app, built from `CLAUDE.md`'s spec against the `prototype/index.html` reference. Code is done and builds clean — this is the checklist to actually go live.
+Next.js + Supabase app, built from `CLAUDE.md`'s spec against the `prototype/index.html` reference.
+
+**Live at [hasuno-inventory-app.vercel.app](https://hasuno-inventory-app.vercel.app).** The steps below are the setup this deployment already went through — keep them around for standing up a fresh environment (staging, a rebuild, someone else's machine) rather than as an outstanding to-do list.
 
 ## What's built
 
-- Next.js 14 (App Router, TypeScript) + Tailwind, matching the prototype's visual system.
-- Supabase Postgres schema + RLS (`supabase/migrations/0001_init.sql`): `profiles`, `items`, `requests`, `staff_reminders`, `push_subscriptions`.
-- Auth: Supabase Auth, name-based login mapped to a synthetic email server-side (`lib/auth.ts`). No public signup — accounts are provisioned from the Accounts screen.
-- All 5 screens (Login, Request, My Requests, Requests, Accounts) with server-enforced role checks (`app/actions/*.ts` + RLS as a second layer).
+- Next.js 14 (App Router, TypeScript) + Tailwind, matching the prototype's visual system — plus a full dark mode (toggle in the header, defaults to system preference).
+- Supabase Postgres schema + RLS (`supabase/migrations/`): `profiles`, `items` (with station/category grouping), `requests` (with an urgent flag), `staff_reminders`, `push_subscriptions`.
+- Auth: Supabase Auth, name-based login mapped to a synthetic email server-side (`lib/auth.ts`). No public signup — accounts are provisioned from the Accounts screens.
+- Login, Request (searchable, grouped by station/category, floating quick-add), My Requests, Requests (grouped by requestor), and Accounts — split into three tabs (Remind / Manage Accounts / Add Account) — all with server-enforced role checks (`app/actions/*.ts` + RLS as a second layer).
 - Realtime: every screen re-syncs live via Supabase Postgres Changes (`components/RealtimeRefresh.tsx`).
 - PWA: `public/manifest.json`, `public/sw.js`, an in-app "Enable notifications" prompt, and a Supabase Edge Function (`supabase/functions/send-reminders`) that pg_cron fires every minute to push due reminders.
 
-## Go live
+See `ARCHITECTURE.md` for the full file-by-file map.
+
+## Setting up a fresh environment
 
 Run these in order. Each step's account/dashboard action is called out; everything else is a command.
 
@@ -36,13 +40,13 @@ npx supabase login
 npx supabase link --project-ref <your-project-ref>
 npx supabase db push
 ```
-This runs both files in `supabase/migrations/`. **`0002_cron.sql` has two placeholders** (`<PROJECT_REF>`, `<CRON_SECRET>`) — edit that file with your real project ref and the `CRON_SECRET` from step 2 before pushing, or apply it manually in the SQL Editor after step 5 once you know both values for certain.
+This runs every file in `supabase/migrations/` in order (schema, cron, item categories + seed data, the urgent flag). **`0002_cron.sql` has two placeholders** (`<PROJECT_REF>`, `<CRON_SECRET>`) — edit that file with your real project ref and the `CRON_SECRET` from step 2 before pushing, or apply it manually in the SQL Editor after step 5 once you know both values for certain.
 
 ### 4. Seed the owner account
 ```bash
 OWNER_NAME=Andy OWNER_PASSWORD='choose-a-real-password' npm run seed:owner
 ```
-This is the only account that exists until you add more from the Accounts screen. Don't reuse the prototype's demo passwords.
+This is the only account that exists until you add more from **Accounts → Add Account**. Don't reuse the prototype's demo passwords.
 
 ### 5. Deploy the reminder push function
 ```bash
@@ -67,7 +71,7 @@ npx vercel --prod
 That last command prints your live URL.
 
 ### 7. Verify on a phone
-On each worker's iPhone: open the URL in Safari → Share → **Add to Home Screen** (required for Web Push on iOS 16.4+). Sign in, tap "Enable notifications," and send yourself a test reminder from the Accounts screen.
+On each worker's iPhone: open the URL in Safari → Share → **Add to Home Screen** (required for Web Push on iOS 16.4+). Sign in, tap "Enable notifications," and send yourself a test reminder from **Accounts → Remind**.
 
 ## Local development
 ```bash

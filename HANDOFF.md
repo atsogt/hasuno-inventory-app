@@ -40,13 +40,22 @@ The prototype is also available on its own as `hasuno-inventory.html`, and every
 - **iPhone caveat:** Web Push requires each worker to "Add to Home Screen" once (iOS 16.4+).
 - **"Local/free" clarification:** running locally is free but only reachable on that one machine while it's on. To use it with staff on their own phones it must be **hosted** (free for this size).
 
-## Status: real app is built, not yet deployed
+## Status: live and in active use
 
-The Next.js + Supabase app described below is fully coded (screens, RLS, realtime, PWA/push, seed script) and builds clean locally. What's left is entirely account/deploy actions a human has to do — see `README.md`'s "Go live" section for the exact command sequence (Supabase project + keys, `supabase db push`, seed owner, deploy the `send-reminders` edge function + pg_cron, `vercel --prod`).
+The app is deployed at **hasuno-inventory-app.vercel.app**, seeded with a real owner account, and has been through several rounds of feature work beyond the original spec. For "what's actually here right now," read `ARCHITECTURE.md` — it's kept in sync with the codebase and is more reliable than this file for implementation detail. This file stays as the origin story / big-picture context.
 
+What's shipped beyond the original build brief:
+- **Item catalog categorization** — `items` gained `station` (Sushi/Kitchen) and `category`, seeded with the full 89-item Hasuno v4 menu list. The Request screen groups by station/category with search and station filters.
+- **Accounts split into three tabs** — Remind, Manage Accounts, Add Account are now separate routes under a sub-nav, instead of one long page.
+- **Duplicate-request handling** — re-requesting an item you've already asked for opens an update dialog (change quantity, mark **urgent**) instead of creating a second row. The Requests screen groups by requestor, most recently active first.
+- **Dark mode** — full palette via CSS variables, toggle in the header, defaults to system preference.
+- **A few real bugs caught along the way**: a critical Next.js CVE (patched via version bump), a hardcoded secret that almost got committed, a git repo that turned out to be rooted at the whole home directory instead of just this project, and several paddings silently doing nothing because they used spacing classes (`p-5.5`, `pt-4.5`) that don't exist in Tailwind's default scale.
+
+Open items:
 1. **Swap in the official `logo.png`** if a real one ever arrives (`assets/logo.png` **and** `public/logo.png`, same filename).
-2. **Auth approach — decided**: Supabase Auth, with the UI's "name" mapped server-side to a synthetic `name@<AUTH_EMAIL_DOMAIN>` address (`lib/auth.ts`). Keeps RLS working off `auth.uid()` while login only ever shows names.
-3. Decide later whether real SMS is worth leaving the free tier.
+2. No in-app password reset yet — only via the Supabase dashboard.
+3. A leftover test item ("Good Job SOfia Item") is sitting in the live catalog from early testing.
+4. Decide later whether real SMS is worth leaving the free tier.
 
 ## Design system (keep consistent)
 
