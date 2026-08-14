@@ -182,6 +182,15 @@ function ItemCard({ entry }: { entry: ItemEntry }) {
 
 export default function GroupedRequestList({ requests }: { requests: Request[] }) {
   const groups = useMemo(() => groupByRequestor(requests), [requests]);
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+
+  function toggle(id: string) {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
 
   if (groups.length === 0) {
     return (
@@ -198,16 +207,27 @@ export default function GroupedRequestList({ requests }: { requests: Request[] }
 
   return (
     <>
-      {groups.map((g) => (
-        <div key={g.requestorId} className="mb-6">
-          <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-accent-dim font-semibold mb-2.5 pt-1">
-            {g.requestorName}
+      {groups.map((g) => {
+        const isCollapsed = collapsed.has(g.requestorId);
+        return (
+          <div key={g.requestorId} className="mb-6">
+            <button
+              type="button"
+              onClick={() => toggle(g.requestorId)}
+              className="w-full flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-accent-dim font-semibold mb-2.5 pt-1"
+            >
+              <span className={`transition-transform ${isCollapsed ? "" : "rotate-90"}`}>▸</span>
+              {g.requestorName}
+              {isCollapsed && (
+                <span className="text-ink-soft normal-case tracking-normal font-normal">
+                  ({g.items.length} item{g.items.length === 1 ? "" : "s"})
+                </span>
+              )}
+            </button>
+            {!isCollapsed && g.items.map((entry) => <ItemCard key={entry.itemName.toLowerCase()} entry={entry} />)}
           </div>
-          {g.items.map((entry) => (
-            <ItemCard key={entry.itemName.toLowerCase()} entry={entry} />
-          ))}
-        </div>
-      ))}
+        );
+      })}
     </>
   );
 }

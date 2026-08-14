@@ -65,6 +65,25 @@ export default function RequestScreen({
   const [confirmDelete, setConfirmDelete] = useState<Item | null>(null);
   const [dismissed, setDismissed] = useState<string[]>([]);
 
+  const [collapsedStations, setCollapsedStations] = useState<Set<Station>>(new Set());
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
+
+  function toggleStation(station: Station) {
+    setCollapsedStations((prev) => {
+      const next = new Set(prev);
+      next.has(station) ? next.delete(station) : next.add(station);
+      return next;
+    });
+  }
+
+  function toggleCategory(key: string) {
+    setCollapsedCategories((prev) => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  }
+
   const categoriesByStation = useMemo(() => {
     const map: Record<Station, string[]> = { Sushi: [], Kitchen: [] };
     for (const item of items) {
@@ -252,48 +271,68 @@ export default function RequestScreen({
         </p>
       )}
 
-      {stationsToRender.map((station) => (
-        <div key={station} className="mb-2">
-          <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-accent-dim font-semibold mb-3 pt-1">
-            {station}
-          </div>
-          {[...grouped.get(station)!.entries()].map(([category, categoryItems]) => (
-            <div key={category} className="mb-6">
-              <div className="font-mono text-[11px] uppercase tracking-wide text-ink-soft mb-2.5 pl-0.5">
-                {category}
-              </div>
-              <div className="grid grid-cols-2 gap-2.5">
-                {categoryItems.map((item) => (
-                  <div key={item.id} className="flex flex-col">
+      {stationsToRender.map((station) => {
+        const stationCollapsed = collapsedStations.has(station);
+        return (
+          <div key={station} className="mb-2">
+            <button
+              type="button"
+              onClick={() => toggleStation(station)}
+              className="w-full flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-accent-dim font-semibold mb-3 pt-1"
+            >
+              <span className={`transition-transform ${stationCollapsed ? "" : "rotate-90"}`}>▸</span>
+              {station}
+            </button>
+            {!stationCollapsed &&
+              [...grouped.get(station)!.entries()].map(([category, categoryItems]) => {
+                const key = `${station}|${category}`;
+                const categoryCollapsed = collapsedCategories.has(key);
+                return (
+                  <div key={category} className="mb-6">
                     <button
-                      className="relative bg-card border border-line rounded-[10px] px-2.5 py-4 text-left flex flex-col gap-1 w-full active:bg-paper-dim active:scale-[0.98]"
-                      onClick={() => requestItem(item)}
                       type="button"
+                      onClick={() => toggleCategory(key)}
+                      className="w-full flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wide text-ink-soft mb-2.5 pl-0.5"
                     >
-                      {item.is_prep && (
-                        <span className="absolute top-2 right-2 font-mono text-[8.5px] uppercase tracking-wide text-gold bg-paper-dim px-1.5 py-0.5 rounded-full">
-                          House-made
-                        </span>
-                      )}
-                      <span className="font-bold text-[15px] pr-14">{item.name}</span>
-                      <span className="font-mono text-[10.5px] text-ink-soft">Qty: {item.amount}</span>
+                      <span className={`transition-transform text-[9px] ${categoryCollapsed ? "" : "rotate-90"}`}>▸</span>
+                      {category}
                     </button>
-                    {canManageCatalog && (
-                      <button
-                        className="self-end font-mono text-[10px] text-ink-soft underline py-1.5 px-0.5"
-                        onClick={() => openEdit(item)}
-                        type="button"
-                      >
-                        edit
-                      </button>
+                    {!categoryCollapsed && (
+                      <div className="grid grid-cols-2 gap-2.5">
+                        {categoryItems.map((item) => (
+                          <div key={item.id} className="flex flex-col">
+                            <button
+                              className="relative bg-card border border-line rounded-[10px] px-2.5 py-4 text-left flex flex-col gap-1 w-full active:bg-paper-dim active:scale-[0.98]"
+                              onClick={() => requestItem(item)}
+                              type="button"
+                            >
+                              {item.is_prep && (
+                                <span className="absolute top-2 right-2 font-mono text-[8.5px] uppercase tracking-wide text-gold bg-paper-dim px-1.5 py-0.5 rounded-full">
+                                  House-made
+                                </span>
+                              )}
+                              <span className="font-bold text-[15px] pr-14">{item.name}</span>
+                              <span className="font-mono text-[10.5px] text-ink-soft">Qty: {item.amount}</span>
+                            </button>
+                            {canManageCatalog && (
+                              <button
+                                className="self-end font-mono text-[10px] text-ink-soft underline py-1.5 px-0.5"
+                                onClick={() => openEdit(item)}
+                                type="button"
+                              >
+                                edit
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      ))}
+                );
+              })}
+          </div>
+        );
+      })}
 
       <button
         type="button"

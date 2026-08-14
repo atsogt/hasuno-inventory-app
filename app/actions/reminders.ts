@@ -6,7 +6,7 @@ import { requireProfile, requireRole } from "@/lib/auth";
 
 export async function scheduleStaffReminder(targetIds: string[], scheduledAtIso: string, message: string) {
   const profile = await requireRole("owner", "manager");
-  if (targetIds.length === 0) return { error: "Pick at least one worker" };
+  if (targetIds.length === 0) return { error: "Pick at least one person" };
   const trimmed = message.trim();
   if (!trimmed) return { error: "Add a short message" };
 

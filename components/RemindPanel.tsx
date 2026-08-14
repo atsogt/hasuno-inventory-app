@@ -21,15 +21,15 @@ export default function RemindPanel({
   staffReminders: StaffReminder[];
 }) {
   const toast = useToast();
-  const [selectedWorkers, setSelectedWorkers] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [when, setWhen] = useState<(typeof WHEN_OPTIONS)[number]["value"]>("now");
   const [customTime, setCustomTime] = useState("");
   const [message, setMessage] = useState("Time to place your inventory order.");
 
-  const workers = accounts.filter((a) => a.role === "worker" && !a.locked);
+  const recipients = accounts.filter((a) => !a.locked);
 
-  function toggleWorker(id: string) {
-    setSelectedWorkers((prev) => (prev.includes(id) ? prev.filter((w) => w !== id) : [...prev, id]));
+  function toggleRecipient(id: string) {
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((w) => w !== id) : [...prev, id]));
   }
 
   function resolveWhenIso(): string | null {
@@ -51,11 +51,11 @@ export default function RemindPanel({
       toast("Pick a custom time");
       return;
     }
-    const result = await scheduleStaffReminder(selectedWorkers, iso, message);
+    const result = await scheduleStaffReminder(selectedIds, iso, message);
     if (result?.error) toast(result.error);
     else {
-      toast(`Reminder scheduled for ${result.count} worker${result.count === 1 ? "" : "s"}`);
-      setSelectedWorkers([]);
+      toast(`Reminder scheduled for ${result.count} ${result.count === 1 ? "person" : "people"}`);
+      setSelectedIds([]);
     }
   }
 
@@ -67,26 +67,27 @@ export default function RemindPanel({
   return (
     <>
       <h2 className="font-mono text-xs uppercase tracking-widest text-ink-soft mb-3.5 flex items-center gap-2 after:content-[''] after:flex-1 after:h-px after:bg-line">
-        Remind Workers to Order
+        Remind Staff to Order
       </h2>
       <div className="panel-card">
-        <label className="field-label">Select workers</label>
-        {workers.length === 0 ? (
-          <p className="font-mono text-xs text-ink-soft">No active workers to remind yet.</p>
+        <label className="field-label">Select people</label>
+        {recipients.length === 0 ? (
+          <p className="font-mono text-xs text-ink-soft">No active accounts to remind yet.</p>
         ) : (
           <div className="flex flex-col gap-0.5 border border-line rounded-[10px] overflow-hidden">
-            {workers.map((w, i) => (
+            {recipients.map((r, i) => (
               <label
-                key={w.id}
+                key={r.id}
                 className={`flex items-center gap-2.5 px-3 py-2.5 text-sm ${i % 2 === 1 ? "bg-paper-dim" : "bg-paper"}`}
               >
                 <input
                   type="checkbox"
                   className="accent-ink"
-                  checked={selectedWorkers.includes(w.id)}
-                  onChange={() => toggleWorker(w.id)}
+                  checked={selectedIds.includes(r.id)}
+                  onChange={() => toggleRecipient(r.id)}
                 />
-                <span>{w.name}</span>
+                <span className="flex-1">{r.name}</span>
+                <span className="font-mono text-[9.5px] uppercase tracking-wide text-ink-soft">{r.role}</span>
               </label>
             ))}
           </div>
