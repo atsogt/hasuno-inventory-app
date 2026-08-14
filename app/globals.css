@@ -60,10 +60,12 @@ html,
 body {
   margin: 0;
   padding: 0;
-  background: rgb(var(--paper));
   color: rgb(var(--ink));
   height: 100%;
 }
+/* No background here on purpose: .aurora (fixed, z-index:-10) is the app's
+   background layer. Body painting its own opaque background would sit in
+   normal flow order and paint over aurora, hiding it entirely. */
 
 /* Aurora backdrop - fixed behind every glass surface so there's something to blur. */
 .aurora {
@@ -79,9 +81,12 @@ body {
 }
 .dark .aurora {
   background:
-    radial-gradient(560px 420px at 12% -6%, rgba(55 200 160 / 0.16), transparent 70%),
-    radial-gradient(640px 480px at 105% 28%, rgba(201 162 75 / 0.1), transparent 70%),
+    radial-gradient(560px 420px at 12% -6%, rgba(74 224 183 / 0.22), transparent 70%),
+    radial-gradient(640px 480px at 105% 28%, rgba(201 162 75 / 0.14), transparent 70%),
+    linear-gradient(180deg, rgba(3 8 7 / 0.2) 0%, rgba(3 8 7 / 0.1) 35%, rgba(2 6 5 / 0.55) 100%),
+    url('/backgrounds/moss-rock-dark.jpg') center 30% / cover no-repeat,
     rgb(var(--paper));
+  background-attachment: fixed;
 }
 
 /* Core glass surface, for any new one-off panel */
