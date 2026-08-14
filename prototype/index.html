@@ -102,6 +102,39 @@
     color:var(--ink-soft); text-decoration:underline; padding:5px 2px;
   }
   .item-edit-link:active{color:var(--accent);}
+
+  .item-pending-card{
+    background:var(--card); border:1px solid var(--accent); border-radius:10px; padding:12px 10px 10px;
+    display:flex; flex-direction:column; gap:8px;
+  }
+  .item-pending-top{
+    display:flex; flex-direction:column; gap:3px; width:100%; text-align:left;
+    background:none; border:none; padding:0; color:inherit; font:inherit;
+  }
+  .qty-stepper{display:flex; align-items:center; gap:6px;}
+  .qty-btn{
+    width:30px; height:30px; flex:none; border-radius:8px; border:1px solid var(--line); background:var(--paper);
+    font-family:'IBM Plex Mono',monospace; font-size:16px; line-height:1; color:var(--ink);
+  }
+  .qty-btn:active{background:var(--paper-dim); transform:scale(0.96);}
+  .qty-input{
+    flex:1; min-width:0; text-align:center; font-family:'IBM Plex Mono',monospace; font-size:15px;
+    border:1px solid var(--line); border-radius:8px; padding:6px 4px; background:var(--paper); color:var(--ink);
+  }
+  .item-pending-bar{height:3px; background:var(--line); border-radius:2px; overflow:hidden;}
+  .item-pending-fill{
+    height:100%; width:100%; background:var(--accent); transform-origin:left;
+    animation-name:pendingShrink; animation-timing-function:linear; animation-fill-mode:forwards;
+  }
+  @keyframes pendingShrink{from{transform:scaleX(1);} to{transform:scaleX(0);}}
+  .item-pending-actions{display:flex; justify-content:space-between;}
+  .item-pending-send, .item-pending-cancel{
+    background:none; border:none; font-family:'IBM Plex Mono',monospace; font-size:10.5px;
+    text-decoration:underline; padding:2px;
+  }
+  .item-pending-send{color:var(--success);}
+  .item-pending-cancel{color:var(--ink-soft);}
+
   .other-row{display:flex; gap:8px;}
   .other-row input{flex:1;}
 
@@ -131,6 +164,31 @@
   .chit-actions-row{margin-top:10px; display:flex; justify-content:space-between; align-items:center; gap:10px;}
   .del-link{background:none; border:none; font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); text-decoration:underline; padding:4px;}
   .del-link:active{color:var(--accent);}
+
+  /* ---------- erase-all variants (Requests screen) ---------- */
+  .erase-all-link{
+    background:none; border:none; font-family:'IBM Plex Mono',monospace; font-size:11px;
+    color:var(--accent); text-decoration:underline; padding:2px 4px; white-space:nowrap;
+  }
+  .erase-all-link:active{color:var(--accent-dim);}
+  .erase-all-variants{margin-top:22px; padding-top:16px; border-top:1px dashed var(--line); display:flex; flex-direction:column; gap:10px;}
+  .erase-variant-label{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-soft); letter-spacing:0.06em; text-transform:uppercase;}
+  .erase-icon-btn{
+    align-self:flex-start; background:var(--card); border:1px solid var(--line); border-radius:10px;
+    padding:9px 14px; font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--accent);
+  }
+  .erase-icon-btn:active{background:var(--paper-dim);}
+  .erase-inline-confirm{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap; background:var(--card);
+    border:1px solid var(--accent); border-radius:10px; padding:10px 12px; font-size:13px;
+  }
+  .erase-inline-confirm span{flex:1; min-width:140px;}
+  .btn-inline-yes, .btn-inline-no{
+    border:none; border-radius:8px; padding:8px 12px; font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:700;
+  }
+  .btn-inline-yes{background:var(--accent); color:#fff;}
+  .btn-inline-yes:active{background:var(--accent-dim);}
+  .btn-inline-no{background:var(--paper-dim); color:var(--ink);}
   .set-reminder-link{
     background:none; border:none; font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft);
     text-decoration:underline; padding:4px 4px 4px 0;
@@ -200,6 +258,19 @@
   }
   .staff-reminder-row-msg{font-size:13.5px; font-weight:600;}
   .staff-reminder-row-meta{font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink-soft); margin-top:3px;}
+
+  .reminder-history-tab-btn{
+    display:flex; align-items:center; justify-content:center; gap:8px; width:100%;
+    background:var(--card); border:1px solid var(--line); border-radius:10px; padding:11px 14px;
+    font-family:'IBM Plex Mono',monospace; font-size:12.5px; font-weight:600; color:var(--ink);
+    margin-bottom:18px;
+  }
+  .reminder-history-tab-btn:active{background:var(--paper-dim);}
+  .reminder-history-count{
+    background:var(--accent); color:#fff; font-size:10.5px; border-radius:20px; padding:1px 8px;
+  }
+  .reminder-history-list{max-height:50vh; overflow-y:auto; margin-bottom:18px;}
+  .reminder-history-list .staff-reminder-row:last-child{border-bottom:none;}
 
   /* ---------- tab bar ---------- */
   .tabbar{
@@ -272,7 +343,11 @@
     reminderEditor: null, // {messageId} while setting a reminder
     acctEditor: null,     // {id, phone, email} while editing an account's contact info
     staffReminders: null,
-    toast: null
+    reminderHistory: null, // permanent log of every staff reminder ever scheduled, survives cancel/dismiss
+    toast: null,
+    confirmEraseAllInline: false, // inline "erase all" confirm (Variant C on Requests screen)
+    showReminderHistory: false,   // Reminder History popup open (Accounts screen)
+    confirmClearHistoryInline: false // inline "clear all history" confirm, inside the history popup
   };
 
   function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
@@ -324,6 +399,13 @@
       state.staffReminders = [];
       await window.storage.set("staffReminders", JSON.stringify(state.staffReminders), true);
     }
+    try{
+      var rhRes = await window.storage.get("reminderHistory", true);
+      state.reminderHistory = JSON.parse(rhRes.value);
+    }catch(e){
+      state.reminderHistory = [];
+      await window.storage.set("reminderHistory", JSON.stringify(state.reminderHistory), true);
+    }
     state.loading = false;
     render();
   }
@@ -339,6 +421,9 @@
   }
   async function saveStaffReminders(){
     await window.storage.set("staffReminders", JSON.stringify(state.staffReminders), true);
+  }
+  async function saveReminderHistory(){
+    await window.storage.set("reminderHistory", JSON.stringify(state.reminderHistory), true);
   }
 
   function showToast(msg){
@@ -392,6 +477,60 @@
     state.currentUser = null;
     state.view = "login";
     render();
+  }
+
+  /* ---------------- pending item stepper (tap to build qty, auto-sends) ---------------- */
+  var PENDING_SEND_MS = 3000;
+  var pendingByItem = {};   // itemId -> {qty, sendAt}
+  var pendingTimers = {};   // itemId -> setTimeout handle
+
+  function beginOrBumpPending(item){
+    if(pendingByItem[item.id]){ bumpPendingQty(item.id, 1); return; }
+    pendingByItem[item.id] = {qty: (item.amount && item.amount > 0) ? item.amount : 1, sendAt: 0};
+    schedulePendingSend(item.id);
+    render();
+  }
+
+  function bumpPendingQty(id, delta){
+    var p = pendingByItem[id];
+    if(!p) return;
+    setPendingQty(id, p.qty + delta);
+  }
+
+  function setPendingQty(id, qty){
+    var p = pendingByItem[id];
+    if(!p) return;
+    p.qty = Math.max(0, qty);
+    schedulePendingSend(id);
+    render();
+  }
+
+  function schedulePendingSend(id){
+    if(pendingTimers[id]) clearTimeout(pendingTimers[id]);
+    var p = pendingByItem[id];
+    if(!p) return;
+    p.sendAt = Date.now() + PENDING_SEND_MS;
+    pendingTimers[id] = setTimeout(function(){ sendPending(id); }, PENDING_SEND_MS);
+  }
+
+  function clearPendingTimer(id){
+    if(pendingTimers[id]){ clearTimeout(pendingTimers[id]); delete pendingTimers[id]; }
+  }
+
+  function cancelPending(id){
+    clearPendingTimer(id);
+    delete pendingByItem[id];
+    render();
+  }
+
+  function sendPending(id){
+    var p = pendingByItem[id];
+    clearPendingTimer(id);
+    delete pendingByItem[id];
+    if(!p) return;
+    var item = state.items.find(function(i){ return i.id === id; });
+    if(item && p.qty > 0) submitRequest(item.name, p.qty);
+    else render();
   }
 
   /* ---------------- request actions ---------------- */
@@ -493,10 +632,16 @@
       scheduledAt: scheduledAtIso,
       message: message.trim(),
       createdBy: state.currentUser.name,
+      createdAt: new Date().toISOString(),
       dismissedBy: []
     };
     state.staffReminders.push(reminder);
     await saveStaffReminders();
+    state.reminderHistory.push({
+      id: reminder.id, targetIds: targetIds.slice(), scheduledAt: reminder.scheduledAt,
+      message: reminder.message, createdBy: reminder.createdBy, createdAt: reminder.createdAt
+    });
+    await saveReminderHistory();
     showToast("Reminder scheduled for " + targetIds.length + " worker" + (targetIds.length===1?"":"s"));
     render();
   }
@@ -506,6 +651,15 @@
     await saveStaffReminders();
     state.modal = null;
     showToast("Reminder cancelled");
+    render();
+  }
+
+  async function clearReminderHistory(){
+    state.reminderHistory = [];
+    await saveReminderHistory();
+    state.showReminderHistory = false;
+    state.confirmClearHistoryInline = false;
+    showToast("Reminder history cleared");
     render();
   }
 
@@ -530,6 +684,15 @@
     state.messages = state.messages.filter(function(m){ return m.id !== id; });
     await saveMessages();
     state.modal = null;
+    render();
+  }
+
+  async function clearAllRequests(){
+    state.messages = [];
+    await saveMessages();
+    state.modal = null;
+    state.confirmEraseAllInline = false;
+    showToast("All requests cleared");
     render();
   }
 
@@ -601,6 +764,7 @@
     if(state.itemEditor) html += renderItemEditorModal();
     if(state.reminderEditor) html += renderReminderModal();
     if(state.acctEditor) html += renderAcctEditorModal();
+    if(state.showReminderHistory) html += renderReminderHistoryModal();
     if(state.toast) html += '<div class="toast">' + esc(state.toast) + '</div>';
     root.innerHTML = html;
     bindGlobal();
@@ -667,6 +831,28 @@
   function renderRequestScreen(){
     var canManageCatalog = state.currentUser.role !== "worker";
     var grid = state.items.map(function(item, i){
+      var pending = pendingByItem[item.id];
+      if(pending){
+        var remainingMs = Math.max(0, pending.sendAt - Date.now());
+        return '<div class="item-cell">' +
+            '<div class="item-pending-card">' +
+              '<button type="button" class="item-pending-top" data-item-id="' + item.id + '">' +
+                '<span class="item-idx">' + String(i+1).padStart(2,"0") + '</span>' +
+                '<span class="item-name">' + esc(item.name) + '</span>' +
+              '</button>' +
+              '<div class="qty-stepper">' +
+                '<button type="button" class="qty-btn" data-qty-dec="' + item.id + '">−</button>' +
+                '<input class="qty-input" type="number" min="0" inputmode="numeric" value="' + pending.qty + '" data-qty-input="' + item.id + '" />' +
+                '<button type="button" class="qty-btn" data-qty-inc="' + item.id + '">+</button>' +
+              '</div>' +
+              '<div class="item-pending-bar"><div class="item-pending-fill" style="animation-duration:' + remainingMs + 'ms"></div></div>' +
+              '<div class="item-pending-actions">' +
+                '<button type="button" class="item-pending-send" data-qty-send="' + item.id + '">Send now</button>' +
+                '<button type="button" class="item-pending-cancel" data-qty-cancel="' + item.id + '">Cancel</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+      }
       return '<div class="item-cell">' +
           '<button class="item-btn" data-item-id="' + item.id + '">' +
             '<span class="item-idx">' + String(i+1).padStart(2,"0") + '</span>' +
@@ -738,8 +924,27 @@
   }
 
   function renderAllRequestsScreen(){
-    return '<h2 class="section-title">Open Requests (' + state.messages.length + ')</h2>' +
+    var count = state.messages.length;
+    var html = '<h2 class="section-title">Open Requests (' + count + ')' +
+        (count > 0 ? ' <button type="button" class="erase-all-link" data-erase-all-a="1">clear all</button>' : '') +
+      '</h2>' +
       renderMessageList(state.messages, {allowDeleteAll:true, showRequester:true});
+    if(count > 0){
+      html += '' +
+        '<div class="erase-all-variants">' +
+          '<div class="erase-variant-label">Variant B — danger button</div>' +
+          '<button type="button" class="btn btn-accent btn-block" data-erase-all-b="1">Erase All Requests</button>' +
+          '<div class="erase-variant-label">Variant C — icon button, inline confirm</div>' +
+          (state.confirmEraseAllInline ?
+            '<div class="erase-inline-confirm">' +
+              '<span>Erase all ' + count + ' requests?</span>' +
+              '<button type="button" class="btn-inline-yes" data-erase-all-c-confirm="1">Yes, erase</button>' +
+              '<button type="button" class="btn-inline-no" data-erase-all-c-cancel="1">No</button>' +
+            '</div>'
+          : '<button type="button" class="erase-icon-btn" data-erase-all-c="1">🗑 Erase all</button>') +
+        '</div>';
+    }
+    return html;
   }
 
   function renderAccountsScreen(){
@@ -778,9 +983,51 @@
       '</div>';
     }).join("");
 
-    return '<h2 class="section-title">Manage Accounts</h2>' + addCard +
+    return '<h2 class="section-title">Manage Accounts</h2>' +
+      '<button type="button" class="reminder-history-tab-btn" data-open-reminder-history="1">' +
+        '⏰ Reminder History' +
+        (state.reminderHistory.length > 0 ? ' <span class="reminder-history-count">' + state.reminderHistory.length + '</span>' : '') +
+      '</button>' +
+      addCard +
       '<h2 class="section-title">All Accounts (' + state.accounts.length + ')</h2>' + rows +
       renderStaffReminderPanel();
+  }
+
+  function renderReminderHistoryModal(){
+    var items = state.reminderHistory.slice().reverse();
+    var list = items.length === 0 ?
+      '<p class="panel-empty-note">No reminders have been sent yet.</p>' :
+      items.map(function(r){
+        var names = r.targetIds.map(function(id){
+          var a = state.accounts.find(function(x){ return x.id === id; });
+          return a ? a.name : "(removed)";
+        }).join(", ") || "(no one)";
+        return '' +
+        '<div class="staff-reminder-row">' +
+          '<div>' +
+            '<div class="staff-reminder-row-msg">' + esc(r.message) + '</div>' +
+            '<div class="staff-reminder-row-meta">' + esc(names) + ' · ' + fmtDate(r.scheduledAt) + ' · sent by ' + esc(r.createdBy) + '</div>' +
+          '</div>' +
+        '</div>';
+      }).join("");
+    var actions = state.confirmClearHistoryInline ?
+      '<div class="modal-actions">' +
+        '<button class="btn btn-ghost" id="reminderHistoryClearCancel">Cancel</button>' +
+        '<button class="btn btn-accent" id="reminderHistoryClearConfirm">Yes, clear all</button>' +
+      '</div>' :
+      '<div class="modal-actions">' +
+        '<button class="btn btn-ghost" id="reminderHistoryClose">Close</button>' +
+        (state.reminderHistory.length > 0 ? '<button class="btn btn-accent" id="reminderHistoryClearAll">Clear all history</button>' : '') +
+      '</div>';
+    return '' +
+    '<div class="modal-backdrop" id="reminderHistoryBackdrop">' +
+      '<div class="modal-card">' +
+        '<h3>Reminder History (' + state.reminderHistory.length + ')</h3>' +
+        '<div class="reminder-history-list">' + list + '</div>' +
+        (state.confirmClearHistoryInline ? '<p>This permanently erases the reminder history log. Currently scheduled reminders are not affected.</p>' : '') +
+        actions +
+      '</div>' +
+    '</div>';
   }
 
   function renderStaffReminderPanel(){
@@ -951,7 +1198,36 @@
     document.querySelectorAll("[data-item-id]").forEach(function(btn){
       btn.addEventListener("click", function(){
         var item = state.items.find(function(i){ return i.id === btn.getAttribute("data-item-id"); });
-        if(item) submitRequest(item.name, item.amount);
+        if(item) beginOrBumpPending(item);
+      });
+    });
+    document.querySelectorAll("[data-qty-inc]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        bumpPendingQty(btn.getAttribute("data-qty-inc"), 1);
+      });
+    });
+    document.querySelectorAll("[data-qty-dec]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        bumpPendingQty(btn.getAttribute("data-qty-dec"), -1);
+      });
+    });
+    document.querySelectorAll("[data-qty-input]").forEach(function(input){
+      input.addEventListener("change", function(){
+        var n = parseInt(input.value, 10);
+        setPendingQty(input.getAttribute("data-qty-input"), isNaN(n) ? 0 : n);
+      });
+      input.addEventListener("keydown", function(e){
+        if(e.key === "Enter") input.blur();
+      });
+    });
+    document.querySelectorAll("[data-qty-send]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        sendPending(btn.getAttribute("data-qty-send"));
+      });
+    });
+    document.querySelectorAll("[data-qty-cancel]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        cancelPending(btn.getAttribute("data-qty-cancel"));
       });
     });
     document.querySelectorAll("[data-edit-item]").forEach(function(el){
@@ -1013,6 +1289,39 @@
         });
       });
     });
+
+    // erase all requests — variants A & B both confirm via modal, C confirms inline
+    document.querySelectorAll("[data-erase-all-a], [data-erase-all-b]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        confirmModal({
+          title: "Erase all requests?",
+          body: "This clears all " + state.messages.length + " open requests for everyone. This can't be undone.",
+          confirmLabel: "Erase all",
+          danger: true,
+          onConfirm: function(){ clearAllRequests(); }
+        });
+      });
+    });
+    var eraseAllC = document.querySelector("[data-erase-all-c]");
+    if(eraseAllC){
+      eraseAllC.addEventListener("click", function(){
+        state.confirmEraseAllInline = true;
+        render();
+      });
+    }
+    var eraseAllCConfirm = document.querySelector("[data-erase-all-c-confirm]");
+    if(eraseAllCConfirm){
+      eraseAllCConfirm.addEventListener("click", function(){
+        clearAllRequests();
+      });
+    }
+    var eraseAllCCancel = document.querySelector("[data-erase-all-c-cancel]");
+    if(eraseAllCCancel){
+      eraseAllCCancel.addEventListener("click", function(){
+        state.confirmEraseAllInline = false;
+        render();
+      });
+    }
 
     // accounts screen
     var addAcctBtn = document.getElementById("addAcctBtn");
@@ -1102,6 +1411,48 @@
         });
       });
     });
+
+    // reminder history popup
+    var openHistoryBtn = document.querySelector("[data-open-reminder-history]");
+    if(openHistoryBtn){
+      openHistoryBtn.addEventListener("click", function(){
+        state.showReminderHistory = true;
+        render();
+      });
+    }
+    var reminderHistoryBackdrop = document.getElementById("reminderHistoryBackdrop");
+    if(reminderHistoryBackdrop){
+      var closeHistory = function(){
+        state.showReminderHistory = false;
+        state.confirmClearHistoryInline = false;
+        render();
+      };
+      var closeBtn = document.getElementById("reminderHistoryClose");
+      if(closeBtn) closeBtn.addEventListener("click", closeHistory);
+      var clearAllBtn = document.getElementById("reminderHistoryClearAll");
+      if(clearAllBtn){
+        clearAllBtn.addEventListener("click", function(){
+          state.confirmClearHistoryInline = true;
+          render();
+        });
+      }
+      var clearCancelBtn = document.getElementById("reminderHistoryClearCancel");
+      if(clearCancelBtn){
+        clearCancelBtn.addEventListener("click", function(){
+          state.confirmClearHistoryInline = false;
+          render();
+        });
+      }
+      var clearConfirmBtn = document.getElementById("reminderHistoryClearConfirm");
+      if(clearConfirmBtn){
+        clearConfirmBtn.addEventListener("click", function(){
+          clearReminderHistory();
+        });
+      }
+      reminderHistoryBackdrop.addEventListener("click", function(e){
+        if(e.target === reminderHistoryBackdrop) closeHistory();
+      });
+    }
 
     // modal
     var backdrop = document.getElementById("modalBackdrop");
