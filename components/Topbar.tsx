@@ -7,10 +7,10 @@ export default function Topbar({ profile }: { profile: Profile }) {
   return (
     <div className="px-5 pt-6 pb-5 flex items-start justify-between gap-3 border-b border-line bg-paper sticky top-0 z-10">
       <div className="flex flex-col leading-tight">
-        <div className="flex items-center gap-3">
-          <Image src="/logo.png" alt="" width={34} height={34} className="object-contain shrink-0" />
-          <span className="font-black text-2xl tracking-tight">
-            Hasuno
+        <div className="flex items-center gap-2.5">
+          <Image src="/logo.png" alt="" width={24} height={24} className="object-contain shrink-0" />
+          <span className="font-black text-2xl leading-none tracking-tight">
+            HASUNO
             <span className="sparkle text-base align-top ml-0.5">✦</span>
             <span className="sparkle sparkle-delay text-[10px] align-top">✦</span>
           </span>
