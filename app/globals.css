@@ -234,12 +234,11 @@ body {
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
   backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
   border: 1px solid var(--glass-stroke);
-  box-shadow: var(--glass-shadow);
-  border-radius: var(--glass-radius);
-  margin: 8px 12px 0;
+  outline: 1px solid var(--glass-edge);
+  outline-offset: -1px;
   padding: 18px 20px;
   position: sticky;
-  top: 8px;
+  top: 0;
   z-index: 10;
 }
 
