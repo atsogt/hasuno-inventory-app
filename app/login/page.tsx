@@ -17,8 +17,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col items-center p-5 pt-16">
-      <div className="glass w-full flex flex-col items-center p-8 pt-10">
+    <div className="flex-1 flex flex-col items-center pt-16">
+      <div className="content-scrim w-full flex flex-col items-center p-8 pt-10">
         <Image
           src="/logo.png"
           alt="Hasuno"

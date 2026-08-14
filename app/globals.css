@@ -103,6 +103,26 @@ body {
   border-radius: var(--glass-radius);
 }
 
+/* Full-width scrim behind page content: separates the fixed background photo
+   from foreground content. Edges fade to the photo instead of a hard border,
+   so it reads as a soft island rather than a bounded card. */
+.content-scrim {
+  background: var(--glass-fill);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
+  border: 1px solid var(--glass-stroke);
+  outline: 1px solid var(--glass-edge);
+  outline-offset: -1px;
+  -webkit-mask-image:
+    linear-gradient(to right, transparent, black 56px, black calc(100% - 56px), transparent),
+    linear-gradient(to bottom, transparent, black 36px, black calc(100% - 36px), transparent);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to right, transparent, black 56px, black calc(100% - 56px), transparent),
+    linear-gradient(to bottom, transparent, black 36px, black calc(100% - 36px), transparent);
+  mask-composite: intersect;
+}
+
 @layer components {
   .panel-card {
     background: var(--glass-fill);

@@ -67,8 +67,23 @@ export default function RequestList({
     });
   }
 
+  const allCollapsed = groups.every((group) => collapsed.has(group.id));
+
+  function toggleAll() {
+    setCollapsed(allCollapsed ? new Set() : new Set(groups.map((group) => group.id)));
+  }
+
   return (
     <>
+      <div className="flex justify-end mb-2.5">
+        <button
+          type="button"
+          onClick={toggleAll}
+          className="font-mono text-[11px] text-ink-soft underline"
+        >
+          {allCollapsed ? "Expand all" : "Collapse all"}
+        </button>
+      </div>
       {groups.map((group) => {
         const isCollapsed = collapsed.has(group.id);
         const urgentCount = group.items.filter((r) => r.urgent).length;

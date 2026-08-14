@@ -1,5 +1,7 @@
 "use client";
 
+import { createPortal } from "react-dom";
+
 export default function Modal({
   title,
   children,
@@ -17,7 +19,7 @@ export default function Modal({
   danger?: boolean;
   confirmDisabled?: boolean;
 }) {
-  return (
+  return createPortal(
     <div
       className="modal-scrim fixed inset-0 flex items-center justify-center z-20 px-5"
       onClick={onCancel}
@@ -42,6 +44,7 @@ export default function Modal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
