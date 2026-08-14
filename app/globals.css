@@ -21,6 +21,7 @@
 
   --glass-fill: rgba(255 255 255 / 0.55);
   --glass-fill-strong: rgba(255 255 255 / 0.72);
+  --glass-fill-modal: rgba(255 255 255 / 0.94);
   --glass-stroke: rgba(255 255 255 / 0.75);
   --glass-edge: rgba(21 37 34 / 0.08);
   --glass-blur: 18px;
@@ -45,6 +46,7 @@
 
   --glass-fill: rgba(24 38 34 / 0.5);
   --glass-fill-strong: rgba(24 38 34 / 0.72);
+  --glass-fill-modal: rgba(22 34 31 / 0.96);
   --glass-stroke: rgba(255 255 255 / 0.12);
   --glass-edge: rgba(0 0 0 / 0.4);
   --glass-shadow: 0 8px 32px rgba(0 0 0 / 0.45), inset 0 1px 0 rgba(255 255 255 / 0.08);
@@ -241,17 +243,17 @@ body {
 
 /* Modal sheet */
 .modal-scrim {
-  background: rgba(10 20 17 / 0.35);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
+  background: rgba(8 16 14 / 0.6);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
 }
 .modal-sheet {
-  background: var(--glass-fill-strong);
+  background: var(--glass-fill-modal);
   -webkit-backdrop-filter: blur(28px) saturate(1.5);
   backdrop-filter: blur(28px) saturate(1.5);
   border: 1px solid var(--glass-stroke);
   border-radius: 24px;
-  box-shadow: 0 20px 60px rgba(15 40 35 / 0.25);
+  box-shadow: 0 20px 60px rgba(15 40 35 / 0.35);
 }
 
 /* Toast */
