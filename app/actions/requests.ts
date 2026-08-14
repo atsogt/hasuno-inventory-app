@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
+import type { Station } from "@/lib/types";
 
 export async function submitRequest(itemName: string, amount: number | null) {
   const profile = await requireProfile();
@@ -62,16 +63,26 @@ export async function clearRequestReminder(id: string) {
   return { ok: true };
 }
 
-export async function addItemToCatalog(name: string, amount: number) {
+export async function addItemToCatalog(
+  name: string,
+  amount: number,
+  station: Station,
+  category: string
+) {
   const profile = await requireProfile();
   if (profile.role === "worker") return { error: "Not allowed." };
   const trimmed = name.trim();
+  const trimmedCategory = category.trim();
   if (!trimmed) return { error: "Item needs a name." };
+  if (!trimmedCategory) return { error: "Item needs a category." };
 
   const supabase = createClient();
-  const { error } = await supabase
-    .from("items")
-    .insert({ name: trimmed, amount: amount > 0 ? amount : 1 });
+  const { error } = await supabase.from("items").insert({
+    name: trimmed,
+    amount: amount > 0 ? amount : 1,
+    station,
+    category: trimmedCategory,
+  });
   if (error) {
     if (error.code === "23505") return { error: `"${trimmed}" is already on the list` };
     return { error: error.message };
@@ -81,16 +92,24 @@ export async function addItemToCatalog(name: string, amount: number) {
   return { ok: true };
 }
 
-export async function saveItemEdit(id: string, name: string, amount: number) {
+export async function saveItemEdit(
+  id: string,
+  name: string,
+  amount: number,
+  station: Station,
+  category: string
+) {
   const profile = await requireProfile();
   if (profile.role === "worker") return { error: "Not allowed." };
   const trimmed = name.trim();
+  const trimmedCategory = category.trim();
   if (!trimmed) return { error: "Item needs a name." };
+  if (!trimmedCategory) return { error: "Item needs a category." };
 
   const supabase = createClient();
   const { error } = await supabase
     .from("items")
-    .update({ name: trimmed, amount: amount > 0 ? amount : 1 })
+    .update({ name: trimmed, amount: amount > 0 ? amount : 1, station, category: trimmedCategory })
     .eq("id", id);
   if (error) {
     if (error.code === "23505") return { error: "Another item already has that name" };

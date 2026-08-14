@@ -15,6 +15,7 @@ const config: Config = {
         "accent-dim": "#8f2e24",
         success: "#4B6B4E",
         warn: "#9C6B1E",
+        gold: "#C9A24B",
       },
       fontFamily: {
         sans: ["'Zen Kaku Gothic New'", "-apple-system", "BlinkMacSystemFont", "sans-serif"],

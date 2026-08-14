@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Modal from "@/components/Modal";
 import { useToast } from "@/components/Toast";
 import {
@@ -10,7 +10,17 @@ import {
   removeItemFromCatalog,
 } from "@/app/actions/requests";
 import { dismissStaffReminder } from "@/app/actions/reminders";
-import type { Item, StaffReminder } from "@/lib/types";
+import type { Item, Station, StaffReminder } from "@/lib/types";
+
+const STATIONS: Station[] = ["Sushi", "Kitchen"];
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 className="font-mono text-xs uppercase tracking-widest text-ink-soft mb-3.5 flex items-center gap-2 after:content-[''] after:flex-1 after:h-px after:bg-line">
+      {children}
+    </h2>
+  );
+}
 
 export default function RequestScreen({
   items,
@@ -23,13 +33,48 @@ export default function RequestScreen({
 }) {
   const toast = useToast();
   const [otherItem, setOtherItem] = useState("");
+  const [search, setSearch] = useState("");
+  const [stationFilter, setStationFilter] = useState<Station | "All">("All");
+
   const [newItemName, setNewItemName] = useState("");
   const [newItemAmount, setNewItemAmount] = useState("1");
+  const [newItemStation, setNewItemStation] = useState<Station>("Sushi");
+  const [newItemCategory, setNewItemCategory] = useState("");
+
   const [editing, setEditing] = useState<Item | null>(null);
   const [editName, setEditName] = useState("");
   const [editAmount, setEditAmount] = useState("1");
+  const [editStation, setEditStation] = useState<Station>("Sushi");
+  const [editCategory, setEditCategory] = useState("");
+
   const [confirmDelete, setConfirmDelete] = useState<Item | null>(null);
   const [dismissed, setDismissed] = useState<string[]>([]);
+
+  const categoriesByStation = useMemo(() => {
+    const map: Record<Station, string[]> = { Sushi: [], Kitchen: [] };
+    for (const item of items) {
+      if (!map[item.station].includes(item.category)) map[item.station].push(item.category);
+    }
+    return map;
+  }, [items]);
+
+  const grouped = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const filtered = items.filter((item) => {
+      if (stationFilter !== "All" && item.station !== stationFilter) return false;
+      if (q && !item.name.toLowerCase().includes(q)) return false;
+      return true;
+    });
+
+    const byStation = new Map<Station, Map<string, Item[]>>();
+    for (const item of filtered) {
+      if (!byStation.has(item.station)) byStation.set(item.station, new Map());
+      const byCategory = byStation.get(item.station)!;
+      if (!byCategory.has(item.category)) byCategory.set(item.category, []);
+      byCategory.get(item.category)!.push(item);
+    }
+    return byStation;
+  }, [items, search, stationFilter]);
 
   async function requestItem(item: Item) {
     const result = await submitRequest(item.name, item.amount);
@@ -48,12 +93,18 @@ export default function RequestScreen({
   }
 
   async function createItem() {
-    const result = await addItemToCatalog(newItemName, Number(newItemAmount) || 1);
+    const result = await addItemToCatalog(
+      newItemName,
+      Number(newItemAmount) || 1,
+      newItemStation,
+      newItemCategory
+    );
     if (result?.error) toast(result.error);
     else {
       toast(`Added "${newItemName.trim()}" to the item list`);
       setNewItemName("");
       setNewItemAmount("1");
+      setNewItemCategory("");
     }
   }
 
@@ -61,11 +112,19 @@ export default function RequestScreen({
     setEditing(item);
     setEditName(item.name);
     setEditAmount(String(item.amount));
+    setEditStation(item.station);
+    setEditCategory(item.category);
   }
 
   async function saveEdit() {
     if (!editing) return;
-    const result = await saveItemEdit(editing.id, editName, Number(editAmount) || 1);
+    const result = await saveItemEdit(
+      editing.id,
+      editName,
+      Number(editAmount) || 1,
+      editStation,
+      editCategory
+    );
     if (result?.error) toast(result.error);
     else {
       toast(`Saved changes to "${editName.trim()}"`);
@@ -88,6 +147,11 @@ export default function RequestScreen({
   }
 
   const visibleReminders = activeReminders.filter((r) => !dismissed.includes(r.id));
+  const stationsToRender = STATIONS.filter((s) => grouped.has(s));
+  const resultCount = [...grouped.values()].reduce(
+    (n, cats) => n + [...cats.values()].reduce((m, list) => m + list.length, 0),
+    0
+  );
 
   return (
     <>
@@ -113,37 +177,83 @@ export default function RequestScreen({
         </div>
       ))}
 
-      <h2 className="font-mono text-xs uppercase tracking-widest text-ink-soft mb-3.5 flex items-center gap-2 after:content-[''] after:flex-1 after:h-px after:bg-line">
-        Request Item
-      </h2>
-      <div className="grid grid-cols-2 gap-2.5 mb-5.5">
-        {items.map((item, i) => (
-          <div key={item.id} className="flex flex-col">
+      <SectionLabel>Request Item</SectionLabel>
+
+      <div className="mb-4 space-y-2.5">
+        <input
+          className="field-input"
+          placeholder="Search items…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <div className="flex gap-1.5">
+          {(["All", ...STATIONS] as const).map((s) => (
             <button
-              className="bg-card border border-line rounded-[10px] px-2.5 py-4 text-left flex flex-col gap-1 w-full active:bg-paper-dim active:scale-[0.98]"
-              onClick={() => requestItem(item)}
+              key={s}
               type="button"
+              onClick={() => setStationFilter(s)}
+              className={`flex-1 py-1.5 rounded-full font-mono text-[11px] uppercase tracking-wide border transition-colors ${
+                stationFilter === s
+                  ? "bg-ink text-paper border-ink"
+                  : "bg-card text-ink-soft border-line active:bg-paper-dim"
+              }`}
             >
-              <span className="font-mono text-[10px] text-ink-soft">{String(i + 1).padStart(2, "0")}</span>
-              <span className="font-bold text-[15px]">{item.name}</span>
-              <span className="font-mono text-[10.5px] text-ink-soft">Qty: {item.amount}</span>
+              {s}
             </button>
-            {canManageCatalog && (
-              <button
-                className="self-end font-mono text-[10px] text-ink-soft underline py-1.5 px-0.5"
-                onClick={() => openEdit(item)}
-                type="button"
-              >
-                edit
-              </button>
-            )}
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
-      <h2 className="font-mono text-xs uppercase tracking-widest text-ink-soft mb-3.5 flex items-center gap-2 after:content-[''] after:flex-1 after:h-px after:bg-line">
-        Other
-      </h2>
+      {resultCount === 0 && (
+        <p className="font-mono text-xs text-ink-soft text-center py-6">
+          No items match &quot;{search}&quot;.
+        </p>
+      )}
+
+      {stationsToRender.map((station) => (
+        <div key={station} className="mb-1">
+          <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-accent-dim font-semibold mb-2">
+            {station}
+          </div>
+          {[...grouped.get(station)!.entries()].map(([category, categoryItems]) => (
+            <div key={category} className="mb-5">
+              <div className="font-mono text-[10.5px] uppercase tracking-wide text-ink-soft mb-2 pl-0.5">
+                {category}
+              </div>
+              <div className="grid grid-cols-2 gap-2.5">
+                {categoryItems.map((item) => (
+                  <div key={item.id} className="flex flex-col">
+                    <button
+                      className="relative bg-card border border-line rounded-[10px] px-2.5 py-4 text-left flex flex-col gap-1 w-full active:bg-paper-dim active:scale-[0.98]"
+                      onClick={() => requestItem(item)}
+                      type="button"
+                    >
+                      {item.is_prep && (
+                        <span className="absolute top-2 right-2 font-mono text-[8.5px] uppercase tracking-wide text-gold bg-paper-dim px-1.5 py-0.5 rounded-full">
+                          House-made
+                        </span>
+                      )}
+                      <span className="font-bold text-[15px] pr-14">{item.name}</span>
+                      <span className="font-mono text-[10.5px] text-ink-soft">Qty: {item.amount}</span>
+                    </button>
+                    {canManageCatalog && (
+                      <button
+                        className="self-end font-mono text-[10px] text-ink-soft underline py-1.5 px-0.5"
+                        onClick={() => openEdit(item)}
+                        type="button"
+                      >
+                        edit
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      ))}
+
+      <SectionLabel>Other</SectionLabel>
       <div className="panel-card">
         <div className="flex gap-2">
           <input
@@ -160,9 +270,7 @@ export default function RequestScreen({
 
       {canManageCatalog && (
         <>
-          <h2 className="font-mono text-xs uppercase tracking-widest text-ink-soft mb-3.5 flex items-center gap-2 after:content-[''] after:flex-1 after:h-px after:bg-line">
-            Create New Item
-          </h2>
+          <SectionLabel>Create New Item</SectionLabel>
           <div className="panel-card">
             <div className="field mb-3.5">
               <label className="field-label">Item name</label>
@@ -173,15 +281,46 @@ export default function RequestScreen({
                 onChange={(e) => setNewItemName(e.target.value)}
               />
             </div>
+            <div className="grid grid-cols-2 gap-2.5 mb-3.5">
+              <div className="field">
+                <label className="field-label">Station</label>
+                <select
+                  className="field-input"
+                  value={newItemStation}
+                  onChange={(e) => setNewItemStation(e.target.value as Station)}
+                >
+                  {STATIONS.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label className="field-label">Amount to get</label>
+                <input
+                  className="field-input"
+                  type="number"
+                  min={1}
+                  value={newItemAmount}
+                  onChange={(e) => setNewItemAmount(e.target.value)}
+                />
+              </div>
+            </div>
             <div className="field mb-4">
-              <label className="field-label">Amount to get</label>
+              <label className="field-label">Category</label>
               <input
                 className="field-input"
-                type="number"
-                min={1}
-                value={newItemAmount}
-                onChange={(e) => setNewItemAmount(e.target.value)}
+                list="new-item-categories"
+                placeholder="e.g. Sauces"
+                value={newItemCategory}
+                onChange={(e) => setNewItemCategory(e.target.value)}
               />
+              <datalist id="new-item-categories">
+                {categoriesByStation[newItemStation].map((c) => (
+                  <option key={c} value={c} />
+                ))}
+              </datalist>
             </div>
             <button className="btn btn-primary w-full" onClick={createItem} type="button">
               Create item
@@ -201,15 +340,45 @@ export default function RequestScreen({
             <label className="field-label">Name</label>
             <input className="field-input" value={editName} onChange={(e) => setEditName(e.target.value)} />
           </div>
+          <div className="grid grid-cols-2 gap-2.5 mb-3.5">
+            <div className="field">
+              <label className="field-label">Station</label>
+              <select
+                className="field-input"
+                value={editStation}
+                onChange={(e) => setEditStation(e.target.value as Station)}
+              >
+                {STATIONS.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label className="field-label">Amount to get</label>
+              <input
+                className="field-input"
+                type="number"
+                min={1}
+                value={editAmount}
+                onChange={(e) => setEditAmount(e.target.value)}
+              />
+            </div>
+          </div>
           <div className="field mb-3.5">
-            <label className="field-label">Amount to get</label>
+            <label className="field-label">Category</label>
             <input
               className="field-input"
-              type="number"
-              min={1}
-              value={editAmount}
-              onChange={(e) => setEditAmount(e.target.value)}
+              list="edit-item-categories"
+              value={editCategory}
+              onChange={(e) => setEditCategory(e.target.value)}
             />
+            <datalist id="edit-item-categories">
+              {categoriesByStation[editStation].map((c) => (
+                <option key={c} value={c} />
+              ))}
+            </datalist>
           </div>
           <button
             className="font-mono text-[11px] text-accent underline"

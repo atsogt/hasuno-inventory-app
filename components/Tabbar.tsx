@@ -15,7 +15,7 @@ export default function Tabbar({ role, requestsBadge }: { role: Role; requestsBa
       : [
           { href: "/request", label: "Request" },
           { href: "/requests", label: "Requests", badge: requestsBadge },
-          { href: "/accounts", label: "Accounts" },
+          { href: "/accounts/remind", label: "Accounts" },
         ];
 
   return (
@@ -24,7 +24,7 @@ export default function Tabbar({ role, requestsBadge }: { role: Role; requestsBa
       style={{ paddingBottom: "calc(10px + env(safe-area-inset-bottom))" }}
     >
       {tabs.map((t) => {
-        const active = pathname === t.href;
+        const active = pathname === t.href || (t.href.startsWith("/accounts") && pathname.startsWith("/accounts"));
         return (
           <Link
             key={t.href}

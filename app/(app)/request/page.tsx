@@ -10,7 +10,11 @@ export default async function RequestPage() {
   const profile = await requireProfile();
   const supabase = createClient();
 
-  const { data: items } = await supabase.from("items").select("*").order("created_at");
+  const { data: items } = await supabase
+    .from("items")
+    .select("*")
+    .order("category")
+    .order("name");
 
   const { data: reminders } = await supabase
     .from("staff_reminders")
@@ -24,7 +28,7 @@ export default async function RequestPage() {
 
   return (
     <>
-      <RealtimeRefresh tables={["staff_reminders"]} />
+      <RealtimeRefresh tables={["staff_reminders", "items"]} />
       <RequestScreen
         items={(items || []) as Item[]}
         canManageCatalog={profile.role !== "worker"}

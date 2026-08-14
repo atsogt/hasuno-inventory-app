@@ -10,10 +10,15 @@ export type Profile = {
   created_at: string;
 };
 
+export type Station = "Sushi" | "Kitchen";
+
 export type Item = {
   id: string;
   name: string;
   amount: number;
+  station: Station;
+  category: string;
+  is_prep: boolean;
   created_at: string;
 };
 
