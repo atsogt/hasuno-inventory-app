@@ -18,7 +18,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <ToastProvider>
       <Topbar profile={profile} />
-      <div className="flex-1 px-5 pt-4.5 pb-24 overflow-y-auto">
+      <div className="flex-1 px-5 pt-5 pb-24 overflow-y-auto">
         <PushRegister />
         {children}
       </div>

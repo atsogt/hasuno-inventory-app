@@ -60,13 +60,13 @@ export default function ManageAccountsPanel({
         All Accounts ({accounts.length})
       </h2>
 
-      <div className="flex flex-col gap-2.5">
+      <div className="flex flex-col gap-3">
         {accounts.map((a) => {
           const manageable = canManage(actor, a);
           return (
             <div
               key={a.id}
-              className={`bg-card border rounded-xl px-4 py-3.5 ${a.locked ? "border-accent/40" : "border-line"}`}
+              className={`bg-card border rounded-xl px-5 py-4 ${a.locked ? "border-accent/40" : "border-line"}`}
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
@@ -96,14 +96,14 @@ export default function ManageAccountsPanel({
                 )}
               </div>
               {manageable && (
-                <div className="flex gap-1.5 mt-3 pt-3 border-t border-line">
-                  <button className="flex-1 bg-paper-dim border border-line rounded-lg py-1.5 font-mono text-[11px]" onClick={() => openContactEditor(a)} type="button">
+                <div className="flex gap-2 mt-3.5 pt-3.5 border-t border-line">
+                  <button className="flex-1 bg-paper-dim border border-line rounded-lg py-2 font-mono text-[11px]" onClick={() => openContactEditor(a)} type="button">
                     Contact
                   </button>
-                  <button className="flex-1 bg-paper-dim border border-line rounded-lg py-1.5 font-mono text-[11px]" onClick={() => handleToggleLock(a)} type="button">
+                  <button className="flex-1 bg-paper-dim border border-line rounded-lg py-2 font-mono text-[11px]" onClick={() => handleToggleLock(a)} type="button">
                     {a.locked ? "Unlock" : "Lock"}
                   </button>
-                  <button className="flex-1 bg-paper-dim border border-line rounded-lg py-1.5 font-mono text-[11px] text-accent" onClick={() => setDeleting(a)} type="button">
+                  <button className="flex-1 bg-paper-dim border border-line rounded-lg py-2 font-mono text-[11px] text-accent" onClick={() => setDeleting(a)} type="button">
                     Delete
                   </button>
                 </div>

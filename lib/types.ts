@@ -31,6 +31,7 @@ export type Request = {
   sent_at: string;
   reminder_at: string | null;
   reminder_notified: boolean;
+  urgent: boolean;
   created_at: string;
 };
 

@@ -13,14 +13,14 @@ export default function AccountsSubnav() {
   const pathname = usePathname();
 
   return (
-    <div className="flex gap-1.5 bg-paper-dim p-1 rounded-xl mb-5.5">
+    <div className="flex gap-2 bg-paper-dim p-1.5 rounded-2xl mb-7">
       {TABS.map((t) => {
         const active = pathname === t.href;
         return (
           <Link
             key={t.href}
             href={t.href}
-            className={`flex-1 text-center py-2 rounded-lg font-mono text-[11px] uppercase tracking-wide transition-colors ${
+            className={`flex-1 text-center py-3 px-2 rounded-xl font-mono text-[11px] uppercase tracking-wide transition-colors ${
               active ? "bg-card text-ink font-semibold shadow-sm" : "text-ink-soft"
             }`}
           >

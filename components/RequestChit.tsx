@@ -6,7 +6,7 @@ import Modal from "@/components/Modal";
 import { fmtDate } from "@/lib/time";
 import {
   deleteRequest,
-  editRequestAmount,
+  editRequest,
   setRequestReminder,
   clearRequestReminder,
 } from "@/app/actions/requests";
@@ -35,6 +35,7 @@ export default function RequestChit({
   const [customTime, setCustomTime] = useState("");
   const [amountEditOpen, setAmountEditOpen] = useState(false);
   const [amountInput, setAmountInput] = useState(String(request.amount ?? ""));
+  const [urgentInput, setUrgentInput] = useState(request.urgent);
   const toast = useToast();
 
   const reminderDue = !!request.reminder_at && new Date(request.reminder_at).getTime() <= Date.now();
@@ -46,7 +47,7 @@ export default function RequestChit({
 
   async function handleSaveAmount() {
     const parsed = Number(amountInput);
-    const result = await editRequestAmount(request.id, parsed > 0 ? parsed : null);
+    const result = await editRequest(request.id, parsed > 0 ? parsed : null, urgentInput);
     if (result?.error) toast(result.error);
     setAmountEditOpen(false);
   }
@@ -81,14 +82,19 @@ export default function RequestChit({
 
   return (
     <>
-      <div className={`chit ${reminderDue ? "border-accent ring-1 ring-accent" : ""}`}>
+      <div className={`chit ${request.urgent ? "border-accent ring-1 ring-accent" : reminderDue ? "border-accent ring-1 ring-accent" : ""}`}>
         <div className="flex justify-between items-start gap-2.5">
           <div>
-            <div className="font-bold text-[16px]">
+            <div className="font-bold text-[16px] flex items-center gap-1.5 flex-wrap">
               {request.item_name}
               {request.amount ? (
-                <span className="font-mono text-xs font-medium text-ink-soft"> ×{request.amount}</span>
+                <span className="font-mono text-xs font-medium text-ink-soft">×{request.amount}</span>
               ) : null}
+              {request.urgent && (
+                <span className="font-mono text-[9.5px] font-bold uppercase tracking-wide text-white bg-accent px-1.5 py-0.5 rounded-full">
+                  Urgent
+                </span>
+              )}
             </div>
             <div className="font-mono text-[11px] text-ink-soft mt-1 leading-relaxed">
               {fmtDate(request.sent_at)}
@@ -130,6 +136,7 @@ export default function RequestChit({
                 className="font-mono text-[11px] text-ink-soft underline"
                 onClick={() => {
                   setAmountInput(String(request.amount ?? ""));
+                  setUrgentInput(request.urgent);
                   setAmountEditOpen(true);
                 }}
                 type="button"
@@ -155,7 +162,7 @@ export default function RequestChit({
           onConfirm={handleSaveAmount}
           confirmLabel="Save"
         >
-          <div className="field">
+          <div className="field mb-3.5">
             <label className="field-label">{request.item_name} — quantity</label>
             <input
               className="field-input"
@@ -166,6 +173,15 @@ export default function RequestChit({
               onChange={(e) => setAmountInput(e.target.value)}
             />
           </div>
+          <label className="flex items-center gap-2 text-[13.5px]">
+            <input
+              type="checkbox"
+              className="accent-accent"
+              checked={urgentInput}
+              onChange={(e) => setUrgentInput(e.target.checked)}
+            />
+            Mark as urgent
+          </label>
         </Modal>
       )}
 

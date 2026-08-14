@@ -4,101 +4,112 @@ import { useMemo, useState } from "react";
 import ElapsedBadge from "@/components/ElapsedBadge";
 import Modal from "@/components/Modal";
 import { fmtDate } from "@/lib/time";
-import { deleteRequest, editRequestAmount } from "@/app/actions/requests";
+import { deleteRequest, editRequest } from "@/app/actions/requests";
 import { useToast } from "@/components/Toast";
 import type { Request } from "@/lib/types";
 
-type Group = {
+type ItemEntry = {
   itemName: string;
+  mostRecent: string;
   oldestSentAt: string;
   uniformAmount: number | null | "mixed";
-  requests: Request[];
+  anyUrgent: boolean;
+  rows: Request[];
 };
 
-function groupRequests(requests: Request[]): Group[] {
-  const byName = new Map<string, Request[]>();
+type PersonGroup = {
+  requestorId: string;
+  requestorName: string;
+  mostRecent: string;
+  items: ItemEntry[];
+};
+
+function groupByRequestor(requests: Request[]): PersonGroup[] {
+  const byPerson = new Map<string, Request[]>();
   for (const r of requests) {
-    const key = r.item_name.trim().toLowerCase();
-    if (!byName.has(key)) byName.set(key, []);
-    byName.get(key)!.push(r);
+    if (!byPerson.has(r.requested_by_id)) byPerson.set(r.requested_by_id, []);
+    byPerson.get(r.requested_by_id)!.push(r);
   }
 
-  const groups: Group[] = [];
-  for (const list of byName.values()) {
-    const oldestSentAt = list.reduce(
-      (oldest, r) => (r.sent_at < oldest ? r.sent_at : oldest),
-      list[0].sent_at
-    );
-    const first = list[0].amount;
-    const allSame = list.every((r) => r.amount === first);
+  const groups: PersonGroup[] = [];
+  for (const [personId, personRequests] of byPerson) {
+    const byItem = new Map<string, Request[]>();
+    for (const r of personRequests) {
+      const key = r.item_name.trim().toLowerCase();
+      if (!byItem.has(key)) byItem.set(key, []);
+      byItem.get(key)!.push(r);
+    }
+
+    const items: ItemEntry[] = [];
+    for (const rows of byItem.values()) {
+      const mostRecent = rows.reduce((mx, r) => (r.sent_at > mx ? r.sent_at : mx), rows[0].sent_at);
+      const oldestSentAt = rows.reduce((mn, r) => (r.sent_at < mn ? r.sent_at : mn), rows[0].sent_at);
+      const first = rows[0].amount;
+      const allSame = rows.every((r) => r.amount === first);
+      items.push({
+        itemName: rows[0].item_name,
+        mostRecent,
+        oldestSentAt,
+        uniformAmount: allSame ? first : "mixed",
+        anyUrgent: rows.some((r) => r.urgent),
+        rows,
+      });
+    }
+    items.sort((a, b) => (a.mostRecent < b.mostRecent ? 1 : -1));
+
     groups.push({
-      itemName: list[0].item_name,
-      oldestSentAt,
-      uniformAmount: allSame ? first : "mixed",
-      requests: list,
+      requestorId: personId,
+      requestorName: personRequests[0].requested_by_name,
+      mostRecent: items[0].mostRecent,
+      items,
     });
   }
 
-  return groups.sort((a, b) => (a.oldestSentAt < b.oldestSentAt ? -1 : 1));
+  groups.sort((a, b) => (a.mostRecent < b.mostRecent ? 1 : -1));
+  return groups;
 }
 
-function RequesterRow({ request, showAmount }: { request: Request; showAmount: boolean }) {
+function EditRow({ request, label }: { request: Request; label: string }) {
   const toast = useToast();
-  const [amountEditOpen, setAmountEditOpen] = useState(false);
+  const [open, setOpen] = useState(false);
   const [amountInput, setAmountInput] = useState(String(request.amount ?? ""));
+  const [urgentInput, setUrgentInput] = useState(request.urgent);
 
   async function handleDelete() {
     const result = await deleteRequest(request.id);
     if (result?.error) toast(result.error);
   }
 
-  async function handleSaveAmount() {
+  async function handleSave() {
     const parsed = Number(amountInput);
-    const result = await editRequestAmount(request.id, parsed > 0 ? parsed : null);
+    const result = await editRequest(request.id, parsed > 0 ? parsed : null, urgentInput);
     if (result?.error) toast(result.error);
-    setAmountEditOpen(false);
+    setOpen(false);
   }
 
   return (
-    <div className="flex items-center justify-between gap-2.5 py-2.5 border-t border-dashed border-line first:border-t-0">
-      <div className="min-w-0">
-        <span className="text-[13.5px] font-semibold">{request.requested_by_name}</span>
-        {showAmount && (
-          <span className="font-mono text-[11px] text-ink-soft"> ×{request.amount ?? "—"}</span>
-        )}
-        <div className="font-mono text-[10.5px] text-ink-soft mt-0.5">{fmtDate(request.sent_at)}</div>
-      </div>
+    <>
       <div className="flex items-center gap-3 shrink-0">
         <button
           className="font-mono text-[11px] text-ink-soft underline"
           onClick={() => {
             setAmountInput(String(request.amount ?? ""));
-            setAmountEditOpen(true);
+            setUrgentInput(request.urgent);
+            setOpen(true);
           }}
           type="button"
         >
           edit
         </button>
-        <button
-          className="font-mono text-[11px] text-ink-soft underline"
-          onClick={handleDelete}
-          type="button"
-        >
+        <button className="font-mono text-[11px] text-ink-soft underline" onClick={handleDelete} type="button">
           delete
         </button>
       </div>
 
-      {amountEditOpen && (
-        <Modal
-          title="Edit quantity"
-          onCancel={() => setAmountEditOpen(false)}
-          onConfirm={handleSaveAmount}
-          confirmLabel="Save"
-        >
-          <div className="field">
-            <label className="field-label">
-              {request.item_name} — {request.requested_by_name}
-            </label>
+      {open && (
+        <Modal title="Edit quantity" onCancel={() => setOpen(false)} onConfirm={handleSave} confirmLabel="Save">
+          <div className="field mb-3.5">
+            <label className="field-label">{label}</label>
             <input
               className="field-input"
               type="number"
@@ -108,14 +119,73 @@ function RequesterRow({ request, showAmount }: { request: Request; showAmount: b
               onChange={(e) => setAmountInput(e.target.value)}
             />
           </div>
+          <label className="flex items-center gap-2 text-[13.5px]">
+            <input
+              type="checkbox"
+              className="accent-accent"
+              checked={urgentInput}
+              onChange={(e) => setUrgentInput(e.target.checked)}
+            />
+            Mark as urgent
+          </label>
         </Modal>
+      )}
+    </>
+  );
+}
+
+function UrgentBadge() {
+  return (
+    <span className="font-mono text-[9.5px] font-bold uppercase tracking-wide text-white bg-accent px-1.5 py-0.5 rounded-full">
+      Urgent
+    </span>
+  );
+}
+
+function ItemCard({ entry }: { entry: ItemEntry }) {
+  const single = entry.rows.length === 1;
+
+  return (
+    <div className={`chit ${entry.anyUrgent ? "border-accent ring-1 ring-accent" : ""}`}>
+      <div className="flex justify-between items-start gap-2.5">
+        <div className="font-bold text-[16px] flex items-center gap-1.5 flex-wrap">
+          {entry.itemName}
+          {typeof entry.uniformAmount === "number" && (
+            <span className="font-mono text-xs font-medium text-ink-soft">×{entry.uniformAmount}</span>
+          )}
+          {entry.anyUrgent && <UrgentBadge />}
+        </div>
+        <ElapsedBadge sentAt={entry.oldestSentAt} />
+      </div>
+
+      {single ? (
+        <div className="mt-2.5 flex justify-between items-center gap-2.5">
+          <span className="font-mono text-[11px] text-ink-soft">{fmtDate(entry.rows[0].sent_at)}</span>
+          <EditRow request={entry.rows[0]} label={entry.itemName} />
+        </div>
+      ) : (
+        <div className="mt-1">
+          {entry.rows.map((r) => (
+            <div
+              key={r.id}
+              className="flex items-center justify-between gap-2.5 py-2 border-t border-dashed border-line first:border-t-0"
+            >
+              <div className="font-mono text-[11px] text-ink-soft">
+                {fmtDate(r.sent_at)}
+                {r.amount ? ` · ×${r.amount}` : ""}
+                {r.urgent ? " · urgent" : ""}
+              </div>
+              <EditRow request={r} label={entry.itemName} />
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );
 }
 
 export default function GroupedRequestList({ requests }: { requests: Request[] }) {
-  const groups = useMemo(() => groupRequests(requests), [requests]);
+  const groups = useMemo(() => groupByRequestor(requests), [requests]);
 
   if (groups.length === 0) {
     return (
@@ -133,26 +203,13 @@ export default function GroupedRequestList({ requests }: { requests: Request[] }
   return (
     <>
       {groups.map((g) => (
-        <div key={g.itemName.toLowerCase()} className="chit">
-          <div className="flex justify-between items-start gap-2.5">
-            <div className="font-bold text-[16px]">
-              {g.itemName}
-              {typeof g.uniformAmount === "number" && (
-                <span className="font-mono text-xs font-medium text-ink-soft"> ×{g.uniformAmount}</span>
-              )}
-              {g.requests.length > 1 && (
-                <span className="font-mono text-[10.5px] text-ink-soft ml-1.5">
-                  ({g.requests.length} requests)
-                </span>
-              )}
-            </div>
-            <ElapsedBadge sentAt={g.oldestSentAt} />
+        <div key={g.requestorId} className="mb-6">
+          <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-accent-dim font-semibold mb-2.5 pt-1">
+            {g.requestorName}
           </div>
-          <div className="mt-1">
-            {g.requests.map((r) => (
-              <RequesterRow key={r.id} request={r} showAmount={g.uniformAmount === "mixed"} />
-            ))}
-          </div>
+          {g.items.map((entry) => (
+            <ItemCard key={entry.itemName.toLowerCase()} entry={entry} />
+          ))}
         </div>
       ))}
     </>

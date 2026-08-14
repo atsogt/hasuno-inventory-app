@@ -34,7 +34,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
       <body>
-        <div className="max-w-[480px] mx-auto min-h-screen flex flex-col bg-paper relative">
+        <div className="starfield" aria-hidden="true" />
+        <div className="max-w-[480px] mx-auto min-h-screen flex flex-col relative">
           {children}
         </div>
       </body>

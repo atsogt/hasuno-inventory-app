@@ -26,15 +26,37 @@ export async function submitRequest(itemName: string, amount: number | null) {
   return { ok: true, label: name + (amount ? ` ×${amount}` : "") };
 }
 
-export async function editRequestAmount(id: string, amount: number | null) {
+export async function editRequest(id: string, amount: number | null, urgent: boolean) {
   await requireProfile();
   const supabase = createClient();
   const { error } = await supabase
     .from("requests")
-    .update({ amount: amount && amount > 0 ? amount : null })
+    .update({ amount: amount && amount > 0 ? amount : null, urgent })
     .eq("id", id);
   if (error) return { error: error.message };
 
+  revalidatePath("/my-requests");
+  revalidatePath("/requests");
+  return { ok: true };
+}
+
+// Called when someone taps an item they already have an open request for:
+// updates the existing row (quantity, urgency) instead of creating a duplicate,
+// and bumps sent_at so the elapsed badge reflects that they just asked again.
+export async function requestAgain(id: string, amount: number | null, urgent: boolean) {
+  await requireProfile();
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("requests")
+    .update({
+      amount: amount && amount > 0 ? amount : null,
+      urgent,
+      sent_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+  if (error) return { error: error.message };
+
+  revalidatePath("/request");
   revalidatePath("/my-requests");
   revalidatePath("/requests");
   return { ok: true };

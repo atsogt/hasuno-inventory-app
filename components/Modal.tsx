@@ -23,7 +23,7 @@ export default function Modal({
       onClick={onCancel}
     >
       <div
-        className="bg-paper w-full max-w-[480px] rounded-t-2xl p-5.5 shadow-2xl"
+        className="bg-paper w-full max-w-[480px] rounded-t-2xl p-6 shadow-2xl"
         style={{ paddingBottom: "calc(22px + env(safe-area-inset-bottom))" }}
         onClick={(e) => e.stopPropagation()}
       >

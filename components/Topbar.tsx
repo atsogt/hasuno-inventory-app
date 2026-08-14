@@ -9,7 +9,11 @@ export default function Topbar({ profile }: { profile: Profile }) {
       <div className="flex flex-col leading-tight">
         <div className="flex items-center gap-3">
           <Image src="/logo.png" alt="" width={34} height={34} className="object-contain shrink-0" />
-          <span className="font-black text-2xl tracking-tight">Hasuno</span>
+          <span className="font-black text-2xl tracking-tight">
+            Hasuno
+            <span className="sparkle text-base align-top ml-0.5">✦</span>
+            <span className="sparkle sparkle-delay text-[10px] align-top">✦</span>
+          </span>
         </div>
         <span className="font-mono text-[13px] font-medium uppercase tracking-wide text-ink-soft mt-1">
           Inventory Requests

@@ -5,12 +5,13 @@ import Modal from "@/components/Modal";
 import { useToast } from "@/components/Toast";
 import {
   submitRequest,
+  requestAgain,
   addItemToCatalog,
   saveItemEdit,
   removeItemFromCatalog,
 } from "@/app/actions/requests";
 import { dismissStaffReminder } from "@/app/actions/reminders";
-import type { Item, Station, StaffReminder } from "@/lib/types";
+import type { Item, Request, Station, StaffReminder } from "@/lib/types";
 
 const STATIONS: Station[] = ["Sushi", "Kitchen"];
 const FAB_RIGHT = "max(1.25rem, calc(50% - 240px + 1.25rem))";
@@ -27,16 +28,28 @@ export default function RequestScreen({
   items,
   canManageCatalog,
   activeReminders,
+  myOpenRequests,
 }: {
   items: Item[];
   canManageCatalog: boolean;
   activeReminders: StaffReminder[];
+  myOpenRequests: Request[];
 }) {
   const toast = useToast();
   const [search, setSearch] = useState("");
   const [stationFilter, setStationFilter] = useState<Station | "All">("All");
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [otherItem, setOtherItem] = useState("");
+
+  const [duplicate, setDuplicate] = useState<Request | null>(null);
+  const [dupAmount, setDupAmount] = useState("1");
+  const [dupUrgent, setDupUrgent] = useState(false);
+
+  const myOpenByName = useMemo(() => {
+    const map = new Map<string, Request>();
+    for (const r of myOpenRequests) map.set(r.item_name.trim().toLowerCase(), r);
+    return map;
+  }, [myOpenRequests]);
 
   const [newItemName, setNewItemName] = useState("");
   const [newItemAmount, setNewItemAmount] = useState("1");
@@ -79,20 +92,45 @@ export default function RequestScreen({
   }, [items, search, stationFilter]);
 
   async function requestItem(item: Item) {
+    const existing = myOpenByName.get(item.name.trim().toLowerCase());
+    if (existing) {
+      setDuplicate(existing);
+      setDupAmount(String(existing.amount ?? item.amount ?? ""));
+      setDupUrgent(existing.urgent);
+      return;
+    }
     const result = await submitRequest(item.name, item.amount);
     if (result?.error) toast(result.error);
     else toast(`Request sent: ${result.label}`);
   }
 
   async function sendOther() {
-    if (!otherItem.trim()) return;
-    const result = await submitRequest(otherItem, null);
+    const name = otherItem.trim();
+    if (!name) return;
+    const existing = myOpenByName.get(name.toLowerCase());
+    if (existing) {
+      setDuplicate(existing);
+      setDupAmount(String(existing.amount ?? ""));
+      setDupUrgent(existing.urgent);
+      setQuickAddOpen(false);
+      return;
+    }
+    const result = await submitRequest(name, null);
     if (result?.error) toast(result.error);
     else {
       toast(`Request sent: ${result.label}`);
       setOtherItem("");
       setQuickAddOpen(false);
     }
+  }
+
+  async function confirmRequestAgain() {
+    if (!duplicate) return;
+    const parsed = Number(dupAmount);
+    const result = await requestAgain(duplicate.id, parsed > 0 ? parsed : null, dupUrgent);
+    if (result?.error) toast(result.error);
+    else toast(`Updated your request for ${duplicate.item_name}`);
+    setDuplicate(null);
   }
 
   async function createItem() {
@@ -273,7 +311,7 @@ export default function RequestScreen({
           onClick={() => setQuickAddOpen(false)}
         >
           <div
-            className="bg-paper w-full max-w-[480px] rounded-t-2xl p-5.5 shadow-2xl max-h-[85vh] overflow-y-auto"
+            className="bg-paper w-full max-w-[480px] rounded-t-2xl p-6 shadow-2xl max-h-[85vh] overflow-y-auto"
             style={{ paddingBottom: "calc(22px + env(safe-area-inset-bottom))" }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -416,6 +454,40 @@ export default function RequestScreen({
           >
             Remove item from list
           </button>
+        </Modal>
+      )}
+
+      {duplicate && (
+        <Modal
+          title="Already on your list"
+          onCancel={() => setDuplicate(null)}
+          onConfirm={confirmRequestAgain}
+          confirmLabel="Update request"
+        >
+          <p className="text-[13.5px] text-ink-soft leading-relaxed mb-4">
+            You already have an open request for <b className="text-ink">{duplicate.item_name}</b>. Update
+            the quantity or mark it urgent instead of sending a duplicate.
+          </p>
+          <div className="field mb-3.5">
+            <label className="field-label">Quantity</label>
+            <input
+              className="field-input"
+              type="number"
+              min={1}
+              placeholder="No specific amount"
+              value={dupAmount}
+              onChange={(e) => setDupAmount(e.target.value)}
+            />
+          </div>
+          <label className="flex items-center gap-2 text-[13.5px]">
+            <input
+              type="checkbox"
+              className="accent-accent"
+              checked={dupUrgent}
+              onChange={(e) => setDupUrgent(e.target.checked)}
+            />
+            Mark as urgent
+          </label>
         </Modal>
       )}
 

@@ -45,9 +45,74 @@ body {
   height: 100%;
 }
 
+.starfield {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  pointer-events: none;
+  background-repeat: repeat;
+  background-size: 280px 200px;
+  background-image:
+    radial-gradient(1.6px 1.6px at 24px 32px, rgb(var(--gold) / 0.55), transparent),
+    radial-gradient(1.2px 1.2px at 96px 84px, rgb(var(--ink-soft) / 0.4), transparent),
+    radial-gradient(1.6px 1.6px at 162px 24px, rgb(var(--gold) / 0.45), transparent),
+    radial-gradient(1.2px 1.2px at 214px 128px, rgb(var(--ink-soft) / 0.35), transparent),
+    radial-gradient(1.2px 1.2px at 64px 150px, rgb(var(--gold) / 0.35), transparent),
+    radial-gradient(1.6px 1.6px at 252px 66px, rgb(var(--ink-soft) / 0.35), transparent),
+    radial-gradient(1.2px 1.2px at 140px 168px, rgb(var(--gold) / 0.3), transparent);
+  opacity: 0.4;
+}
+.dark .starfield {
+  opacity: 1;
+  animation: twinkle 6s ease-in-out infinite;
+}
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .starfield {
+    animation: none !important;
+  }
+}
+
+.sparkle {
+  display: inline-block;
+  color: rgb(var(--gold));
+  animation: sparkle 2.6s ease-in-out infinite;
+}
+.sparkle.sparkle-delay {
+  animation-delay: 1.1s;
+}
+@keyframes sparkle {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sparkle {
+    animation: none;
+    opacity: 0.8;
+  }
+}
+
 @layer components {
+  .panel-card {
+    @apply bg-card border border-line rounded-2xl px-5 py-5 mb-4;
+  }
   .chit {
-    @apply relative bg-card border border-line rounded-chit px-4 py-3.5 mb-4;
+    @apply relative bg-card border border-line rounded-chit px-5 py-4 mb-5;
     box-shadow: 0 1px 0 rgb(var(--line));
   }
   .chit::before {
