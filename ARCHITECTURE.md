@@ -38,7 +38,7 @@ Login is by **name**, not email — but Supabase Auth requires an email, so `nam
 | `app/(app)/layout.tsx` | Topbar + Tabbar + PushRegister shell | Runs `requireProfile()`; wraps children in `<ToastProvider>` |
 | `app/(app)/request/page.tsx` | Request screen | Fetches `items`, this user's active `staff_reminders`, and this user's own open `requests` (for duplicate detection) |
 | `app/(app)/my-requests/page.tsx` | Worker's own requests | `requireProfile()` only (any role) |
-| `app/(app)/requests/page.tsx` | All requests, grouped by requestor | `requireRole("owner","manager")` |
+| `app/(app)/requests/page.tsx` | All requests, flat list newest-first, requester name shown per chit | `requireRole("owner","manager")` |
 | `app/(app)/accounts/layout.tsx` | `<AccountsSubnav>` (Remind / Manage Accounts / Add Account tabs) + children | `requireRole("owner","manager")` |
 | `app/(app)/accounts/page.tsx` | — | Redirects to `/accounts/remind` |
 | `app/(app)/accounts/remind/page.tsx` | `<RemindPanel>` | Worker reminder scheduling + scheduled/sent list |
@@ -69,8 +69,7 @@ Login is by **name**, not email — but Supabase Auth requires an email, so `nam
 | File | Purpose |
 |---|---|
 | `RequestScreen.tsx` | Search + Sushi/Kitchen filter pills, item grid grouped by station→category, floating "+" quick-add button opening a sheet (free-text request + owner/manager catalog-add), duplicate-request dialog, item edit modal |
-| `RequestList.tsx` / `RequestChit.tsx` | Used on `/my-requests`: request cards with elapsed badge, urgent badge, quantity+urgent edit modal, delete, per-request reminder modal |
-| `GroupedRequestList.tsx` | Used on `/requests`: groups by requestor (most recently active first), then by item within each person (most recent first); a person's repeat requests for the same item collapse into one card with edit/delete per underlying row |
+| `RequestList.tsx` / `RequestChit.tsx` | Used on **both** `/my-requests` (worker, `showRequester=false`, `allowDeleteAll=false`, own reminder modal via `selfId`) and `/requests` (owner/manager, `showRequester=true`, `allowDeleteAll=true`) — one flat list of individual request chits, each with its own elapsed badge, urgent badge, quantity+urgent edit modal, delete. Deliberately the *same* component on both routes so edit/delete behavior and modal layout can't drift between roles. |
 | `AccountsSubnav.tsx` | Segmented-control tabs for the three `/accounts/*` routes |
 | `RemindPanel.tsx` | Worker picker + send-at options + message → `scheduleStaffReminder`; lists scheduled/sent reminders with cancel |
 | `ManageAccountsPanel.tsx` | Account cards (avatar initial, role badge, contact info) with Contact/Lock/Delete actions gated by `canManage()` |
@@ -80,7 +79,7 @@ Login is by **name**, not email — but Supabase Auth requires an email, so `nam
 | `PushRegister.tsx` | Registers `public/sw.js`, prompts + subscribes to Web Push, POSTs subscription to `/api/push/subscribe` |
 | `ThemeToggle.tsx` | Toggles the `dark` class on `<html>`, persists choice to `localStorage` |
 | `Toast.tsx` | `ToastProvider` + `useToast()` — app-wide toast context |
-| `Modal.tsx` | Generic confirm/cancel modal — `fixed inset-0`, centered, used everywhere. **Must be rendered as a sibling of any `.chit`/`.panel-card` ancestor, never nested inside one** — those classes set `backdrop-filter`, which per spec makes the element a containing block for `position: fixed` descendants, trapping the modal inside the small card (tiny, off-center, and its scrim no longer blocks clicks outside the card). See `GroupedRequestList.tsx`'s `ItemCard`, which lifts edit state up so the modal renders once, outside the `.chit` div. |
+| `Modal.tsx` | Generic confirm/cancel modal — `fixed inset-0`, centered, used everywhere. **Must be rendered as a sibling of any `.chit`/`.panel-card` ancestor, never nested inside one** — those classes set `backdrop-filter`, which per spec makes the element a containing block for `position: fixed` descendants, trapping the modal inside the small card (tiny, off-center, and its scrim no longer blocks clicks outside the card, so more than one could end up "open" at once). `RequestChit.tsx` gets this right: state is per-chit, but the modal is a sibling of `.chit`, not a descendant. (A grouped/collapsing variant of the owner-manager Requests view hit exactly this bug and was scrapped in favor of reusing `RequestChit.tsx` directly.) |
 | `Topbar.tsx` (Server Component) / `Tabbar.tsx` | Chrome; `Tabbar` shows role-based tabs + a "has requests" badge dot; Accounts tab highlights active for any `/accounts/*` sub-route |
 
 ### Database (`supabase/`)
