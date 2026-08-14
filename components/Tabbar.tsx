@@ -9,11 +9,11 @@ export default function Tabbar({ role, requestsBadge }: { role: Role; requestsBa
   const tabs =
     role === "worker"
       ? [
-          { href: "/request", label: "Request" },
+          { href: "/request", label: "Item" },
           { href: "/my-requests", label: "My Requests" },
         ]
       : [
-          { href: "/request", label: "Request" },
+          { href: "/request", label: "Item" },
           { href: "/requests", label: "Requests", badge: requestsBadge },
           { href: "/accounts/remind", label: "Accounts" },
         ];

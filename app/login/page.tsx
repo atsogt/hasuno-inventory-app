@@ -17,12 +17,16 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-8">
-      <div className="w-24 h-24 mb-3.5 flex items-center justify-center">
-        <Image src="/logo.png" alt="Hasuno" width={96} height={96} className="object-contain" />
-      </div>
-      <h1 className="font-black text-2xl mb-0.5">Hasuno</h1>
-      <p className="font-mono text-[11px] text-ink-soft tracking-widest uppercase mb-7">
+    <div className="flex-1 flex flex-col items-center p-8 pt-24">
+      <Image
+        src="/logo.png"
+        alt="Hasuno"
+        width={153}
+        height={96}
+        className="object-contain mb-4"
+      />
+      <h1 className="font-black text-2xl mb-1.5">HASUNO</h1>
+      <p className="font-mono text-[11px] text-ink-soft tracking-widest uppercase mb-8">
         Inventory Requests
       </p>
 

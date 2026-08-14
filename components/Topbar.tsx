@@ -11,7 +11,7 @@ export default function Topbar({ profile }: { profile: Profile }) {
           <Image src="/logo.png" alt="" width={38} height={24} className="object-contain shrink-0" />
           <span className="font-black text-2xl leading-none tracking-tight">HASUNO</span>
         </div>
-        <span className="font-mono text-[13px] font-medium uppercase tracking-wide text-ink-soft mt-1">
+        <span className="font-mono text-[13px] font-medium uppercase tracking-wide text-ink-soft mt-2">
           Inventory Requests
         </span>
       </div>

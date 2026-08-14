@@ -300,7 +300,7 @@ export default function RequestScreen({
         onClick={() => setQuickAddOpen(true)}
         aria-label="Quick add"
         style={{ right: FAB_RIGHT }}
-        className="fixed bottom-24 z-10 w-14 h-14 rounded-full bg-accent-deep text-white text-3xl leading-none font-light flex items-center justify-center shadow-[0_6px_20px_rgba(21,122,94,0.4)] border-2 border-paper transition-transform hover:scale-105 hover:rotate-90 active:scale-95 motion-reduce:transition-none motion-reduce:hover:rotate-0"
+        className="fixed bottom-24 z-10 w-14 h-14 rounded-full bg-urgent text-white text-3xl leading-none font-light flex items-center justify-center shadow-[0_6px_20px_rgba(178,58,46,0.4)] border-2 border-paper transition-transform hover:scale-105 hover:rotate-90 active:scale-95 motion-reduce:transition-none motion-reduce:hover:rotate-0"
       >
         <span className="-translate-y-[1px]">+</span>
       </button>
