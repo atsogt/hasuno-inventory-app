@@ -44,3 +44,12 @@ export type StaffReminder = {
   dismissed_by: string[];
   created_at: string;
 };
+
+export type ReminderHistoryEntry = {
+  id: string;
+  message: string;
+  scheduled_at: string;
+  created_by_name: string;
+  target_ids: string[];
+  created_at: string;
+};

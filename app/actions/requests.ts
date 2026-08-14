@@ -2,10 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { requireProfile } from "@/lib/auth";
+import { requireProfile, requireRole } from "@/lib/auth";
 import type { Station } from "@/lib/types";
 
-export async function submitRequest(itemName: string, amount: number | null) {
+export async function submitRequest(itemName: string, amount: number | null, urgent = false) {
   const profile = await requireProfile();
   const name = itemName.trim();
   if (!name) return { error: "Pick or type an item." };
@@ -14,6 +14,7 @@ export async function submitRequest(itemName: string, amount: number | null) {
   const { error } = await supabase.from("requests").insert({
     item_name: name,
     amount: amount && amount > 0 ? amount : null,
+    urgent,
     requested_by_id: profile.id,
     requested_by_name: profile.name,
     sent_at: new Date().toISOString(),
@@ -68,6 +69,18 @@ export async function deleteRequest(id: string) {
   const { error } = await supabase.from("requests").delete().eq("id", id);
   if (error) return { error: error.message };
 
+  revalidatePath("/my-requests");
+  revalidatePath("/requests");
+  return { ok: true };
+}
+
+export async function clearAllRequests() {
+  await requireRole("owner", "manager");
+  const supabase = createClient();
+  const { error } = await supabase.from("requests").delete().not("id", "is", null);
+  if (error) return { error: error.message };
+
+  revalidatePath("/request");
   revalidatePath("/my-requests");
   revalidatePath("/requests");
   return { ok: true };

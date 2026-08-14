@@ -19,6 +19,14 @@ export async function scheduleStaffReminder(targetIds: string[], scheduledAtIso:
   });
   if (error) return { error: error.message };
 
+  // Best-effort audit log entry — a failure here shouldn't block the reminder itself.
+  await supabase.from("reminder_history").insert({
+    target_ids: targetIds,
+    scheduled_at: scheduledAtIso,
+    message: trimmed,
+    created_by_name: profile.name,
+  });
+
   revalidatePath("/accounts");
   revalidatePath("/request");
   return { ok: true, count: targetIds.length };
@@ -28,6 +36,16 @@ export async function deleteStaffReminder(id: string) {
   await requireRole("owner", "manager");
   const supabase = createClient();
   const { error } = await supabase.from("staff_reminders").delete().eq("id", id);
+  if (error) return { error: error.message };
+
+  revalidatePath("/accounts");
+  return { ok: true };
+}
+
+export async function clearReminderHistory() {
+  await requireRole("owner", "manager");
+  const supabase = createClient();
+  const { error } = await supabase.from("reminder_history").delete().not("id", "is", null);
   if (error) return { error: error.message };
 
   revalidatePath("/accounts");

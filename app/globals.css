@@ -283,6 +283,16 @@ body {
   box-shadow: 0 8px 32px rgba(15 40 35 / 0.3);
 }
 
+/* Countdown fill on the Request screen's tap-to-build-quantity stepper */
+@keyframes pendingShrink {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
 /* Urgent badge - always red */
 .badge-urgent {
   background: rgb(var(--urgent));

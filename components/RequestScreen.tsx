@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import Modal from "@/components/Modal";
 import { useToast } from "@/components/Toast";
 import {
@@ -15,6 +15,15 @@ import type { Item, Request, Station, StaffReminder } from "@/lib/types";
 
 const STATIONS: Station[] = ["Sushi", "Kitchen"];
 const FAB_RIGHT = "max(1.25rem, calc(50% - 240px + 1.25rem))";
+const PENDING_SEND_MS = 3000;
+
+type PendingItem = {
+  name: string;
+  qty: number;
+  urgent: boolean;
+  existingId?: string;
+  gen: number;
+};
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -50,6 +59,110 @@ export default function RequestScreen({
     for (const r of myOpenRequests) map.set(r.item_name.trim().toLowerCase(), r);
     return map;
   }, [myOpenRequests]);
+
+  // Tap-to-build-quantity stepper: tapping an item opens an inline stepper instead of
+  // sending instantly. Further taps / +/- / typing a number adjust the quantity, and it
+  // auto-sends after a few seconds of no interaction. Covers both a brand-new request and
+  // bumping the quantity on a request you already have open (replaces the old "Already on
+  // your list" dialog for item-grid taps — the dialog stays for the free-text "Other" field).
+  const pendingRef = useRef<Record<string, PendingItem>>({});
+  const timersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const [, rerender] = useReducer((n: number) => n + 1, 0);
+
+  function setPendingFor(id: string, next: PendingItem | null) {
+    const map = { ...pendingRef.current };
+    if (next) map[id] = next;
+    else delete map[id];
+    pendingRef.current = map;
+    rerender();
+  }
+
+  function scheduleSend(id: string) {
+    if (timersRef.current[id]) clearTimeout(timersRef.current[id]);
+    timersRef.current[id] = setTimeout(() => firePending(id), PENDING_SEND_MS);
+  }
+
+  async function firePending(id: string) {
+    delete timersRef.current[id];
+    const p = pendingRef.current[id];
+    if (!p) return;
+    setPendingFor(id, null);
+    if (p.qty <= 0) return;
+    if (p.existingId) {
+      const result = await requestAgain(p.existingId, p.qty, p.urgent);
+      if (result?.error) toast(result.error);
+      else toast(`Updated your request for ${p.name}`);
+    } else {
+      const result = await submitRequest(p.name, p.qty, p.urgent);
+      if (result?.error) toast(result.error);
+      else toast(`Request sent: ${result.label}`);
+    }
+  }
+
+  function beginOrBump(item: Item) {
+    const cur = pendingRef.current[item.id];
+    if (cur) {
+      setPendingFor(item.id, { ...cur, qty: cur.qty + 1, gen: cur.gen + 1 });
+    } else {
+      const existing = myOpenByName.get(item.name.trim().toLowerCase());
+      setPendingFor(item.id, {
+        name: item.name,
+        qty: existing?.amount ?? item.amount ?? 1,
+        urgent: existing?.urgent ?? false,
+        existingId: existing?.id,
+        gen: 0,
+      });
+    }
+    scheduleSend(item.id);
+  }
+
+  function bumpQty(id: string, delta: number) {
+    const cur = pendingRef.current[id];
+    if (!cur) return;
+    setPendingFor(id, { ...cur, qty: Math.max(0, cur.qty + delta), gen: cur.gen + 1 });
+    scheduleSend(id);
+  }
+
+  function setQtyExact(id: string, qty: number) {
+    const cur = pendingRef.current[id];
+    if (!cur) return;
+    setPendingFor(id, { ...cur, qty: Math.max(0, qty), gen: cur.gen + 1 });
+    scheduleSend(id);
+  }
+
+  function toggleUrgentPending(id: string) {
+    const cur = pendingRef.current[id];
+    if (!cur) return;
+    setPendingFor(id, { ...cur, urgent: !cur.urgent, gen: cur.gen + 1 });
+    scheduleSend(id);
+  }
+
+  function cancelPending(id: string) {
+    if (timersRef.current[id]) {
+      clearTimeout(timersRef.current[id]);
+      delete timersRef.current[id];
+    }
+    setPendingFor(id, null);
+  }
+
+  function sendPendingNow(id: string) {
+    if (timersRef.current[id]) clearTimeout(timersRef.current[id]);
+    firePending(id);
+  }
+
+  // If the screen unmounts (e.g. tapping another tab) while something is still pending,
+  // flush it instead of silently dropping a quantity the user already tapped in.
+  useEffect(() => {
+    return () => {
+      Object.keys(timersRef.current).forEach((id) => clearTimeout(timersRef.current[id]));
+      Object.values(pendingRef.current).forEach((p) => {
+        if (p.qty <= 0) return;
+        if (p.existingId) requestAgain(p.existingId, p.qty, p.urgent);
+        else submitRequest(p.name, p.qty, p.urgent);
+      });
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [newItemName, setNewItemName] = useState("");
   const [newItemAmount, setNewItemAmount] = useState("1");
@@ -109,19 +222,6 @@ export default function RequestScreen({
     }
     return byStation;
   }, [items, search, stationFilter]);
-
-  async function requestItem(item: Item) {
-    const existing = myOpenByName.get(item.name.trim().toLowerCase());
-    if (existing) {
-      setDuplicate(existing);
-      setDupAmount(String(existing.amount ?? item.amount ?? ""));
-      setDupUrgent(existing.urgent);
-      return;
-    }
-    const result = await submitRequest(item.name, item.amount);
-    if (result?.error) toast(result.error);
-    else toast(`Request sent: ${result.label}`);
-  }
 
   async function sendOther() {
     const name = otherItem.trim();
@@ -299,32 +399,106 @@ export default function RequestScreen({
                     </button>
                     {!categoryCollapsed && (
                       <div className="grid grid-cols-2 gap-2.5">
-                        {categoryItems.map((item) => (
-                          <div key={item.id} className="flex flex-col">
-                            <button
-                              className="relative bg-card border border-line rounded-[10px] px-2.5 py-4 text-left flex flex-col gap-1 w-full active:bg-paper-dim active:scale-[0.98]"
-                              onClick={() => requestItem(item)}
-                              type="button"
-                            >
-                              {item.is_prep && (
-                                <span className="absolute top-2 right-2 font-mono text-[8.5px] uppercase tracking-wide text-gold bg-paper-dim px-1.5 py-0.5 rounded-full">
-                                  House-made
-                                </span>
+                        {categoryItems.map((item) => {
+                          const p = pendingRef.current[item.id];
+                          return (
+                            <div key={item.id} className="flex flex-col">
+                              {p ? (
+                                <div className="bg-card border border-accent rounded-[10px] px-2.5 py-3 flex flex-col gap-2">
+                                  <button
+                                    type="button"
+                                    className="text-left"
+                                    onClick={() => beginOrBump(item)}
+                                  >
+                                    <span className="font-bold text-[15px] block">{item.name}</span>
+                                  </button>
+                                  <div className="flex items-center gap-1.5">
+                                    <button
+                                      type="button"
+                                      className="w-7 h-7 flex-none rounded-lg border border-line bg-paper font-mono text-base leading-none active:bg-paper-dim"
+                                      onClick={() => bumpQty(item.id, -1)}
+                                    >
+                                      −
+                                    </button>
+                                    <input
+                                      className="field-input flex-1 min-w-0 text-center py-1.5"
+                                      type="number"
+                                      min={0}
+                                      inputMode="numeric"
+                                      value={p.qty}
+                                      onChange={(e) => {
+                                        const n = parseInt(e.target.value, 10);
+                                        setQtyExact(item.id, Number.isNaN(n) ? 0 : n);
+                                      }}
+                                    />
+                                    <button
+                                      type="button"
+                                      className="w-7 h-7 flex-none rounded-lg border border-line bg-paper font-mono text-base leading-none active:bg-paper-dim"
+                                      onClick={() => bumpQty(item.id, 1)}
+                                    >
+                                      +
+                                    </button>
+                                  </div>
+                                  <label className="flex items-center gap-1.5 text-[11.5px]">
+                                    <input
+                                      type="checkbox"
+                                      className="accent-urgent"
+                                      checked={p.urgent}
+                                      onChange={() => toggleUrgentPending(item.id)}
+                                    />
+                                    Urgent
+                                  </label>
+                                  <div className="h-[3px] bg-line rounded-full overflow-hidden">
+                                    <div
+                                      key={p.gen}
+                                      className="h-full bg-accent origin-left"
+                                      style={{ animation: `pendingShrink ${PENDING_SEND_MS}ms linear forwards` }}
+                                    />
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <button
+                                      type="button"
+                                      className="font-mono text-[10.5px] text-ink-soft underline"
+                                      onClick={() => cancelPending(item.id)}
+                                    >
+                                      Cancel
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="font-mono text-[10.5px] text-accent-dim underline"
+                                      onClick={() => sendPendingNow(item.id)}
+                                    >
+                                      Send now
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <button
+                                  className="relative bg-card border border-line rounded-[10px] px-2.5 py-4 text-left flex flex-col gap-1 w-full active:bg-paper-dim active:scale-[0.98]"
+                                  onClick={() => beginOrBump(item)}
+                                  type="button"
+                                >
+                                  {item.is_prep && (
+                                    <span className="absolute top-2 right-2 font-mono text-[8.5px] uppercase tracking-wide text-gold bg-paper-dim px-1.5 py-0.5 rounded-full">
+                                      House-made
+                                    </span>
+                                  )}
+                                  <span className="font-bold text-[15px] pr-14">{item.name}</span>
+                                  <span className="font-mono text-[10.5px] text-ink-soft">Qty: {item.amount}</span>
+                                </button>
                               )}
-                              <span className="font-bold text-[15px] pr-14">{item.name}</span>
-                              <span className="font-mono text-[10.5px] text-ink-soft">Qty: {item.amount}</span>
-                            </button>
-                            {canManageCatalog && (
-                              <button
-                                className="self-end font-mono text-[10px] text-ink-soft underline py-1.5 px-0.5"
-                                onClick={() => openEdit(item)}
-                                type="button"
-                              >
-                                edit
-                              </button>
-                            )}
-                          </div>
-                        ))}
+                              {canManageCatalog && !p && (
+                                <button
+                                  className="self-end font-mono text-[10px] text-ink-soft underline py-1.5 px-0.5"
+                                  onClick={() => openEdit(item)}
+                                  type="button"
+                                >
+                                  edit
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>

@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useToast } from "@/components/Toast";
 import { fmtDate } from "@/lib/time";
 import { scheduleStaffReminder, deleteStaffReminder } from "@/app/actions/reminders";
-import type { Profile, StaffReminder } from "@/lib/types";
+import ReminderHistoryButton from "@/components/ReminderHistoryButton";
+import type { Profile, ReminderHistoryEntry, StaffReminder } from "@/lib/types";
 
 const WHEN_OPTIONS = [
   { label: "Now", value: "now" },
@@ -16,9 +17,11 @@ const WHEN_OPTIONS = [
 export default function RemindPanel({
   accounts,
   staffReminders,
+  reminderHistory,
 }: {
   accounts: Profile[];
   staffReminders: StaffReminder[];
+  reminderHistory: ReminderHistoryEntry[];
 }) {
   const toast = useToast();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -69,6 +72,7 @@ export default function RemindPanel({
       <h2 className="font-mono text-xs uppercase tracking-widest text-ink-soft mb-3.5 flex items-center gap-2 after:content-[''] after:flex-1 after:h-px after:bg-line">
         Remind Staff to Order
       </h2>
+      <ReminderHistoryButton accounts={accounts} history={reminderHistory} />
       <div className="panel-card">
         <label className="field-label">Select people</label>
         {recipients.length === 0 ? (

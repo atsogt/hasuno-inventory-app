@@ -1,6 +1,7 @@
 import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import RequestList from "@/components/RequestList";
+import RequestsHeader from "@/components/RequestsHeader";
 import RealtimeRefresh from "@/components/RealtimeRefresh";
 import type { Request } from "@/lib/types";
 
@@ -15,9 +16,7 @@ export default async function RequestsPage() {
   return (
     <>
       <RealtimeRefresh tables={["requests"]} />
-      <h2 className="font-mono text-xs uppercase tracking-widest text-ink-soft mb-3.5 flex items-center gap-2 after:content-[''] after:flex-1 after:h-px after:bg-line">
-        Open Requests ({requests?.length || 0})
-      </h2>
+      <RequestsHeader count={requests?.length || 0} />
       <RequestList
         requests={(requests || []) as Request[]}
         showRequester
