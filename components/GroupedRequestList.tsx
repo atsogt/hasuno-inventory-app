@@ -69,47 +69,95 @@ function groupByRequestor(requests: Request[]): PersonGroup[] {
   return groups;
 }
 
-function EditRow({ request, label }: { request: Request; label: string }) {
-  const toast = useToast();
-  const [open, setOpen] = useState(false);
-  const [amountInput, setAmountInput] = useState(String(request.amount ?? ""));
-  const [urgentInput, setUrgentInput] = useState(request.urgent);
+function EditButtons({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
+  return (
+    <div className="flex items-center gap-3 shrink-0">
+      <button className="font-mono text-[11px] text-ink-soft underline" onClick={onEdit} type="button">
+        edit
+      </button>
+      <button className="font-mono text-[11px] text-ink-soft underline" onClick={onDelete} type="button">
+        delete
+      </button>
+    </div>
+  );
+}
 
-  async function handleDelete() {
-    const result = await deleteRequest(request.id);
+function UrgentBadge() {
+  return <span className="badge-urgent">Urgent</span>;
+}
+
+function ItemCard({ entry }: { entry: ItemEntry }) {
+  const toast = useToast();
+  const single = entry.rows.length === 1;
+
+  const [editing, setEditing] = useState<Request | null>(null);
+  const [amountInput, setAmountInput] = useState("");
+  const [urgentInput, setUrgentInput] = useState(false);
+
+  function openEdit(request: Request) {
+    setEditing(request);
+    setAmountInput(String(request.amount ?? ""));
+    setUrgentInput(request.urgent);
+  }
+
+  async function handleDelete(id: string) {
+    const result = await deleteRequest(id);
     if (result?.error) toast(result.error);
   }
 
   async function handleSave() {
+    if (!editing) return;
     const parsed = Number(amountInput);
-    const result = await editRequest(request.id, parsed > 0 ? parsed : null, urgentInput);
+    const result = await editRequest(editing.id, parsed > 0 ? parsed : null, urgentInput);
     if (result?.error) toast(result.error);
-    setOpen(false);
+    setEditing(null);
   }
 
   return (
     <>
-      <div className="flex items-center gap-3 shrink-0">
-        <button
-          className="font-mono text-[11px] text-ink-soft underline"
-          onClick={() => {
-            setAmountInput(String(request.amount ?? ""));
-            setUrgentInput(request.urgent);
-            setOpen(true);
-          }}
-          type="button"
-        >
-          edit
-        </button>
-        <button className="font-mono text-[11px] text-ink-soft underline" onClick={handleDelete} type="button">
-          delete
-        </button>
+      <div className={`chit ${entry.anyUrgent ? "chit-urgent" : ""}`}>
+        <div className="flex justify-between items-start gap-2.5">
+          <div className="font-bold text-[16px] flex items-center gap-1.5 flex-wrap">
+            {entry.itemName}
+            {typeof entry.uniformAmount === "number" && (
+              <span className="font-mono text-xs font-medium text-ink-soft">×{entry.uniformAmount}</span>
+            )}
+            {entry.anyUrgent && <UrgentBadge />}
+          </div>
+          <ElapsedBadge sentAt={entry.oldestSentAt} />
+        </div>
+
+        {single ? (
+          <div className="mt-2.5 flex justify-between items-center gap-2.5">
+            <span className="font-mono text-[11px] text-ink-soft">{fmtDate(entry.rows[0].sent_at)}</span>
+            <EditButtons
+              onEdit={() => openEdit(entry.rows[0])}
+              onDelete={() => handleDelete(entry.rows[0].id)}
+            />
+          </div>
+        ) : (
+          <div className="mt-1">
+            {entry.rows.map((r) => (
+              <div
+                key={r.id}
+                className="flex items-center justify-between gap-2.5 py-2 border-t border-dashed border-line first:border-t-0"
+              >
+                <div className="font-mono text-[11px] text-ink-soft">
+                  {fmtDate(r.sent_at)}
+                  {r.amount ? ` · ×${r.amount}` : ""}
+                  {r.urgent ? " · urgent" : ""}
+                </div>
+                <EditButtons onEdit={() => openEdit(r)} onDelete={() => handleDelete(r.id)} />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {open && (
-        <Modal title="Edit quantity" onCancel={() => setOpen(false)} onConfirm={handleSave} confirmLabel="Save">
+      {editing && (
+        <Modal title="Edit quantity" onCancel={() => setEditing(null)} onConfirm={handleSave} confirmLabel="Save">
           <div className="field mb-3.5">
-            <label className="field-label">{label}</label>
+            <label className="field-label">{entry.itemName}</label>
             <input
               className="field-input"
               type="number"
@@ -131,52 +179,6 @@ function EditRow({ request, label }: { request: Request; label: string }) {
         </Modal>
       )}
     </>
-  );
-}
-
-function UrgentBadge() {
-  return <span className="badge-urgent">Urgent</span>;
-}
-
-function ItemCard({ entry }: { entry: ItemEntry }) {
-  const single = entry.rows.length === 1;
-
-  return (
-    <div className={`chit ${entry.anyUrgent ? "chit-urgent" : ""}`}>
-      <div className="flex justify-between items-start gap-2.5">
-        <div className="font-bold text-[16px] flex items-center gap-1.5 flex-wrap">
-          {entry.itemName}
-          {typeof entry.uniformAmount === "number" && (
-            <span className="font-mono text-xs font-medium text-ink-soft">×{entry.uniformAmount}</span>
-          )}
-          {entry.anyUrgent && <UrgentBadge />}
-        </div>
-        <ElapsedBadge sentAt={entry.oldestSentAt} />
-      </div>
-
-      {single ? (
-        <div className="mt-2.5 flex justify-between items-center gap-2.5">
-          <span className="font-mono text-[11px] text-ink-soft">{fmtDate(entry.rows[0].sent_at)}</span>
-          <EditRow request={entry.rows[0]} label={entry.itemName} />
-        </div>
-      ) : (
-        <div className="mt-1">
-          {entry.rows.map((r) => (
-            <div
-              key={r.id}
-              className="flex items-center justify-between gap-2.5 py-2 border-t border-dashed border-line first:border-t-0"
-            >
-              <div className="font-mono text-[11px] text-ink-soft">
-                {fmtDate(r.sent_at)}
-                {r.amount ? ` · ×${r.amount}` : ""}
-                {r.urgent ? " · urgent" : ""}
-              </div>
-              <EditRow request={r} label={entry.itemName} />
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
   );
 }
 

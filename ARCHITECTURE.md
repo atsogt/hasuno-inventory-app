@@ -80,7 +80,7 @@ Login is by **name**, not email — but Supabase Auth requires an email, so `nam
 | `PushRegister.tsx` | Registers `public/sw.js`, prompts + subscribes to Web Push, POSTs subscription to `/api/push/subscribe` |
 | `ThemeToggle.tsx` | Toggles the `dark` class on `<html>`, persists choice to `localStorage` |
 | `Toast.tsx` | `ToastProvider` + `useToast()` — app-wide toast context |
-| `Modal.tsx` | Generic confirm/cancel bottom-sheet modal, used everywhere |
+| `Modal.tsx` | Generic confirm/cancel modal — `fixed inset-0`, centered, used everywhere. **Must be rendered as a sibling of any `.chit`/`.panel-card` ancestor, never nested inside one** — those classes set `backdrop-filter`, which per spec makes the element a containing block for `position: fixed` descendants, trapping the modal inside the small card (tiny, off-center, and its scrim no longer blocks clicks outside the card). See `GroupedRequestList.tsx`'s `ItemCard`, which lifts edit state up so the modal renders once, outside the `.chit` div. |
 | `Topbar.tsx` (Server Component) / `Tabbar.tsx` | Chrome; `Tabbar` shows role-based tabs + a "has requests" badge dot; Accounts tab highlights active for any `/accounts/*` sub-route |
 
 ### Database (`supabase/`)
