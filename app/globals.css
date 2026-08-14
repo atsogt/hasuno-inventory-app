@@ -107,6 +107,99 @@ body {
   }
 }
 
+.liquid-glass {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: max(0px, calc(50% - 240px));
+  right: max(0px, calc(50% - 240px));
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background: rgb(var(--card) / 0.4);
+  border-left: 1px solid rgb(var(--line) / 0.4);
+  border-right: 1px solid rgb(var(--line) / 0.4);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+}
+
+.liquid-glass .blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(50px);
+}
+.liquid-glass .blob-1 {
+  width: 280px;
+  height: 280px;
+  top: -80px;
+  left: -70px;
+  background: rgb(var(--gold) / 0.5);
+  animation: drift1 24s ease-in-out infinite;
+}
+.liquid-glass .blob-2 {
+  width: 240px;
+  height: 240px;
+  bottom: -60px;
+  right: -60px;
+  background: rgb(var(--accent) / 0.32);
+  animation: drift2 28s ease-in-out infinite;
+}
+.liquid-glass .blob-3 {
+  width: 200px;
+  height: 200px;
+  top: 42%;
+  left: 20%;
+  background: rgb(var(--success) / 0.35);
+  animation: drift3 32s ease-in-out infinite;
+}
+@keyframes drift1 {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(50px, 70px) scale(1.15);
+  }
+}
+@keyframes drift2 {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-40px, -60px) scale(1.1);
+  }
+}
+@keyframes drift3 {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-30px, 40px) scale(0.9);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .liquid-glass .blob {
+    animation: none !important;
+  }
+}
+
+.lotus-plant {
+  position: absolute;
+  bottom: 0;
+  width: 76px;
+  height: auto;
+  opacity: 0.85;
+}
+.lotus-plant.lotus-left {
+  left: 10px;
+}
+.lotus-plant.lotus-right {
+  right: 10px;
+  transform: scaleX(-1);
+}
+
 @layer components {
   .panel-card {
     @apply bg-card border border-line rounded-2xl px-5 py-5 mb-4;

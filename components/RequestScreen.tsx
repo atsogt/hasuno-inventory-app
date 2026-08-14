@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Modal from "@/components/Modal";
+import GlassBackdrop from "@/components/GlassBackdrop";
 import { useToast } from "@/components/Toast";
 import {
   submitRequest,
@@ -197,6 +198,7 @@ export default function RequestScreen({
 
   return (
     <>
+      <GlassBackdrop />
       {visibleReminders.map((r) => (
         <div
           key={r.id}
