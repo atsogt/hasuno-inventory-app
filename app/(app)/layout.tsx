@@ -20,7 +20,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <div className="navbar-glass">
         <Topbar profile={profile} />
       </div>
-      <div className="flex-1 px-5 pt-5 pb-24 overflow-y-auto">
+      <div className="glass flex-1 mx-3 mt-2 mb-3 px-5 pt-5 pb-24 overflow-y-auto">
         <PushRegister />
         {children}
       </div>

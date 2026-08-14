@@ -74,10 +74,12 @@ body {
   z-index: -10;
   pointer-events: none;
   background:
-    radial-gradient(560px 420px at 12% -6%, rgba(55 200 160 / 0.22), transparent 70%),
-    radial-gradient(640px 480px at 105% 28%, rgba(201 162 75 / 0.18), transparent 70%),
-    radial-gradient(520px 420px at 45% 110%, rgba(55 200 160 / 0.14), transparent 70%),
+    radial-gradient(560px 420px at 12% -6%, rgba(55 200 160 / 0.16), transparent 70%),
+    radial-gradient(640px 480px at 105% 28%, rgba(201 162 75 / 0.12), transparent 70%),
+    linear-gradient(180deg, rgba(238 244 241 / 0.35) 0%, rgba(238 244 241 / 0.2) 40%, rgba(226 236 231 / 0.55) 100%),
+    url('/backgrounds/sky-light.jpg') center 25% / cover no-repeat,
     rgb(var(--paper));
+  background-attachment: fixed;
 }
 .dark .aurora {
   background:
