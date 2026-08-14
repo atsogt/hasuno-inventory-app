@@ -4,7 +4,12 @@ import { useState } from "react";
 import ElapsedBadge from "@/components/ElapsedBadge";
 import Modal from "@/components/Modal";
 import { fmtDate } from "@/lib/time";
-import { deleteRequest, setRequestReminder, clearRequestReminder } from "@/app/actions/requests";
+import {
+  deleteRequest,
+  editRequestAmount,
+  setRequestReminder,
+  clearRequestReminder,
+} from "@/app/actions/requests";
 import { useToast } from "@/components/Toast";
 import type { Request } from "@/lib/types";
 
@@ -28,6 +33,8 @@ export default function RequestChit({
 }) {
   const [reminderOpen, setReminderOpen] = useState(false);
   const [customTime, setCustomTime] = useState("");
+  const [amountEditOpen, setAmountEditOpen] = useState(false);
+  const [amountInput, setAmountInput] = useState(String(request.amount ?? ""));
   const toast = useToast();
 
   const reminderDue = !!request.reminder_at && new Date(request.reminder_at).getTime() <= Date.now();
@@ -35,6 +42,13 @@ export default function RequestChit({
   async function handleDelete() {
     const result = await deleteRequest(request.id);
     if (result?.error) toast(result.error);
+  }
+
+  async function handleSaveAmount() {
+    const parsed = Number(amountInput);
+    const result = await editRequestAmount(request.id, parsed > 0 ? parsed : null);
+    if (result?.error) toast(result.error);
+    setAmountEditOpen(false);
   }
 
   async function setQuick(opt: (typeof QUICK_OPTIONS)[number]) {
@@ -67,7 +81,7 @@ export default function RequestChit({
 
   return (
     <>
-      <div className={`chit ${reminderDue ? "border-accent shadow-[0_0_0_1px_#B23A2E]" : ""}`}>
+      <div className={`chit ${reminderDue ? "border-accent ring-1 ring-accent" : ""}`}>
         <div className="flex justify-between items-start gap-2.5">
           <div>
             <div className="font-bold text-[16px]">
@@ -111,16 +125,49 @@ export default function RequestChit({
             <span />
           )}
           {canDelete && (
-            <button
-              className="font-mono text-[11px] text-ink-soft underline"
-              onClick={handleDelete}
-              type="button"
-            >
-              delete
-            </button>
+            <span className="flex items-center gap-3">
+              <button
+                className="font-mono text-[11px] text-ink-soft underline"
+                onClick={() => {
+                  setAmountInput(String(request.amount ?? ""));
+                  setAmountEditOpen(true);
+                }}
+                type="button"
+              >
+                edit
+              </button>
+              <button
+                className="font-mono text-[11px] text-ink-soft underline"
+                onClick={handleDelete}
+                type="button"
+              >
+                delete
+              </button>
+            </span>
           )}
         </div>
       </div>
+
+      {amountEditOpen && (
+        <Modal
+          title="Edit quantity"
+          onCancel={() => setAmountEditOpen(false)}
+          onConfirm={handleSaveAmount}
+          confirmLabel="Save"
+        >
+          <div className="field">
+            <label className="field-label">{request.item_name} — quantity</label>
+            <input
+              className="field-input"
+              type="number"
+              min={1}
+              placeholder="No specific amount"
+              value={amountInput}
+              onChange={(e) => setAmountInput(e.target.value)}
+            />
+          </div>
+        </Modal>
+      )}
 
       {reminderOpen && (
         <Modal

@@ -19,7 +19,7 @@ export default function Modal({
 }) {
   return (
     <div
-      className="fixed inset-0 bg-[rgba(28,43,42,0.45)] flex items-end justify-center z-20"
+      className="fixed inset-0 bg-black/50 flex items-end justify-center z-20"
       onClick={onCancel}
     >
       <div

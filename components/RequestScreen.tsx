@@ -13,6 +13,7 @@ import { dismissStaffReminder } from "@/app/actions/reminders";
 import type { Item, Station, StaffReminder } from "@/lib/types";
 
 const STATIONS: Station[] = ["Sushi", "Kitchen"];
+const FAB_RIGHT = "max(1.25rem, calc(50% - 240px + 1.25rem))";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -32,9 +33,10 @@ export default function RequestScreen({
   activeReminders: StaffReminder[];
 }) {
   const toast = useToast();
-  const [otherItem, setOtherItem] = useState("");
   const [search, setSearch] = useState("");
   const [stationFilter, setStationFilter] = useState<Station | "All">("All");
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [otherItem, setOtherItem] = useState("");
 
   const [newItemName, setNewItemName] = useState("");
   const [newItemAmount, setNewItemAmount] = useState("1");
@@ -89,6 +91,7 @@ export default function RequestScreen({
     else {
       toast(`Request sent: ${result.label}`);
       setOtherItem("");
+      setQuickAddOpen(false);
     }
   }
 
@@ -105,6 +108,7 @@ export default function RequestScreen({
       setNewItemName("");
       setNewItemAmount("1");
       setNewItemCategory("");
+      setQuickAddOpen(false);
     }
   }
 
@@ -158,7 +162,7 @@ export default function RequestScreen({
       {visibleReminders.map((r) => (
         <div
           key={r.id}
-          className="flex items-start gap-2.5 bg-[#FBEFE9] border border-accent rounded-xl p-3.5 mb-5"
+          className="flex items-start gap-2.5 bg-accent/10 border border-accent rounded-xl p-3.5 mb-5"
         >
           <div className="text-lg leading-none">⏰</div>
           <div className="flex-1">
@@ -179,7 +183,7 @@ export default function RequestScreen({
 
       <SectionLabel>Request Item</SectionLabel>
 
-      <div className="mb-4 space-y-2.5">
+      <div className="mb-5 space-y-2.5">
         <input
           className="field-input"
           placeholder="Search items…"
@@ -211,13 +215,13 @@ export default function RequestScreen({
       )}
 
       {stationsToRender.map((station) => (
-        <div key={station} className="mb-1">
-          <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-accent-dim font-semibold mb-2">
+        <div key={station} className="mb-2">
+          <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-accent-dim font-semibold mb-3 pt-1">
             {station}
           </div>
           {[...grouped.get(station)!.entries()].map(([category, categoryItems]) => (
-            <div key={category} className="mb-5">
-              <div className="font-mono text-[10.5px] uppercase tracking-wide text-ink-soft mb-2 pl-0.5">
+            <div key={category} className="mb-6">
+              <div className="font-mono text-[11px] uppercase tracking-wide text-ink-soft mb-2.5 pl-0.5">
                 {category}
               </div>
               <div className="grid grid-cols-2 gap-2.5">
@@ -253,80 +257,105 @@ export default function RequestScreen({
         </div>
       ))}
 
-      <SectionLabel>Other</SectionLabel>
-      <div className="panel-card">
-        <div className="flex gap-2">
-          <input
-            className="field-input flex-1"
-            placeholder="Type item name…"
-            value={otherItem}
-            onChange={(e) => setOtherItem(e.target.value)}
-          />
-          <button className="btn btn-accent" onClick={sendOther} type="button">
-            Send
-          </button>
-        </div>
-      </div>
+      <button
+        type="button"
+        onClick={() => setQuickAddOpen(true)}
+        aria-label="Quick add"
+        style={{ right: FAB_RIGHT }}
+        className="fixed bottom-24 z-10 w-14 h-14 rounded-full bg-accent text-white text-3xl leading-none font-light flex items-center justify-center shadow-[0_6px_20px_rgba(178,58,46,0.4)] border-2 border-paper transition-transform hover:scale-105 hover:rotate-90 active:scale-95 motion-reduce:transition-none motion-reduce:hover:rotate-0"
+      >
+        <span className="-translate-y-[1px]">+</span>
+      </button>
 
-      {canManageCatalog && (
-        <>
-          <SectionLabel>Create New Item</SectionLabel>
-          <div className="panel-card">
-            <div className="field mb-3.5">
-              <label className="field-label">Item name</label>
+      {quickAddOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-end justify-center z-20"
+          onClick={() => setQuickAddOpen(false)}
+        >
+          <div
+            className="bg-paper w-full max-w-[480px] rounded-t-2xl p-5.5 shadow-2xl max-h-[85vh] overflow-y-auto"
+            style={{ paddingBottom: "calc(22px + env(safe-area-inset-bottom))" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="m-0 text-[17px] font-bold">Quick Add</h3>
+              <button
+                type="button"
+                onClick={() => setQuickAddOpen(false)}
+                aria-label="Close"
+                className="w-7 h-7 flex items-center justify-center rounded-full bg-paper-dim text-ink-soft text-sm"
+              >
+                ✕
+              </button>
+            </div>
+
+            <label className="field-label">Request something else</label>
+            <div className="flex gap-2 mb-2">
               <input
-                className="field-input"
-                placeholder="e.g. Sesame Oil"
-                value={newItemName}
-                onChange={(e) => setNewItemName(e.target.value)}
+                className="field-input flex-1"
+                placeholder="Type item name…"
+                value={otherItem}
+                onChange={(e) => setOtherItem(e.target.value)}
               />
+              <button className="btn btn-accent" onClick={sendOther} type="button">
+                Send
+              </button>
             </div>
-            <div className="grid grid-cols-2 gap-2.5 mb-3.5">
-              <div className="field">
-                <label className="field-label">Station</label>
-                <select
-                  className="field-input"
-                  value={newItemStation}
-                  onChange={(e) => setNewItemStation(e.target.value as Station)}
-                >
-                  {STATIONS.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="field">
-                <label className="field-label">Amount to get</label>
-                <input
-                  className="field-input"
-                  type="number"
-                  min={1}
-                  value={newItemAmount}
-                  onChange={(e) => setNewItemAmount(e.target.value)}
-                />
-              </div>
-            </div>
-            <div className="field mb-4">
-              <label className="field-label">Category</label>
-              <input
-                className="field-input"
-                list="new-item-categories"
-                placeholder="e.g. Sauces"
-                value={newItemCategory}
-                onChange={(e) => setNewItemCategory(e.target.value)}
-              />
-              <datalist id="new-item-categories">
-                {categoriesByStation[newItemStation].map((c) => (
-                  <option key={c} value={c} />
-                ))}
-              </datalist>
-            </div>
-            <button className="btn btn-primary w-full" onClick={createItem} type="button">
-              Create item
-            </button>
+
+            {canManageCatalog && (
+              <>
+                <div className="border-t border-dashed border-line my-5" />
+                <label className="field-label">Add to catalog</label>
+                <div className="field mb-3">
+                  <input
+                    className="field-input"
+                    placeholder="Item name, e.g. Sesame Oil"
+                    value={newItemName}
+                    onChange={(e) => setNewItemName(e.target.value)}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2.5 mb-3">
+                  <select
+                    className="field-input"
+                    value={newItemStation}
+                    onChange={(e) => setNewItemStation(e.target.value as Station)}
+                  >
+                    {STATIONS.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    className="field-input"
+                    type="number"
+                    min={1}
+                    placeholder="Qty to get"
+                    value={newItemAmount}
+                    onChange={(e) => setNewItemAmount(e.target.value)}
+                  />
+                </div>
+                <div className="field mb-4">
+                  <input
+                    className="field-input"
+                    list="new-item-categories"
+                    placeholder="Category, e.g. Sauces"
+                    value={newItemCategory}
+                    onChange={(e) => setNewItemCategory(e.target.value)}
+                  />
+                  <datalist id="new-item-categories">
+                    {categoriesByStation[newItemStation].map((c) => (
+                      <option key={c} value={c} />
+                    ))}
+                  </datalist>
+                </div>
+                <button className="btn btn-primary w-full" onClick={createItem} type="button">
+                  Create item
+                </button>
+              </>
+            )}
           </div>
-        </>
+        </div>
       )}
 
       {editing && (

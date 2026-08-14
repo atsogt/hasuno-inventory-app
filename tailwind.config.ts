@@ -1,21 +1,26 @@
 import type { Config } from "tailwindcss";
 
+function withOpacity(variable: string) {
+  return `rgb(var(${variable}) / <alpha-value>)`;
+}
+
 const config: Config = {
+  darkMode: "class",
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {
-        ink: "#1C2B2A",
-        "ink-soft": "#3A4A47",
-        paper: "#F6F1E6",
-        "paper-dim": "#ECE4D2",
-        card: "#FBF8F1",
-        line: "#D9CEB4",
-        accent: "#B23A2E",
-        "accent-dim": "#8f2e24",
-        success: "#4B6B4E",
-        warn: "#9C6B1E",
-        gold: "#C9A24B",
+        ink: withOpacity("--ink"),
+        "ink-soft": withOpacity("--ink-soft"),
+        paper: withOpacity("--paper"),
+        "paper-dim": withOpacity("--paper-dim"),
+        card: withOpacity("--card"),
+        line: withOpacity("--line"),
+        accent: withOpacity("--accent"),
+        "accent-dim": withOpacity("--accent-dim"),
+        success: withOpacity("--success"),
+        warn: withOpacity("--warn"),
+        gold: withOpacity("--gold"),
       },
       fontFamily: {
         sans: ["'Zen Kaku Gothic New'", "-apple-system", "BlinkMacSystemFont", "sans-serif"],

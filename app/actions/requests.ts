@@ -26,6 +26,20 @@ export async function submitRequest(itemName: string, amount: number | null) {
   return { ok: true, label: name + (amount ? ` ×${amount}` : "") };
 }
 
+export async function editRequestAmount(id: string, amount: number | null) {
+  await requireProfile();
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("requests")
+    .update({ amount: amount && amount > 0 ? amount : null })
+    .eq("id", id);
+  if (error) return { error: error.message };
+
+  revalidatePath("/my-requests");
+  revalidatePath("/requests");
+  return { ok: true };
+}
+
 export async function deleteRequest(id: string) {
   await requireProfile();
   const supabase = createClient();
