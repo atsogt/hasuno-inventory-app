@@ -5,6 +5,12 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile, requireRole } from "@/lib/auth";
 import type { Station } from "@/lib/types";
 
+// A PostgREST update/delete matching zero rows returns no error — the row may have been
+// deleted meanwhile (e.g. by clearAllRequests) or filtered out by RLS because it is not
+// the caller's. Without an explicit row check these actions report success for a write
+// that never happened, and the requester never learns their ask did not land.
+const NO_ROW = "That request is no longer available - try again.";
+
 export async function submitRequest(itemName: string, amount: number | null, urgent = false) {
   const profile = await requireProfile();
   const name = itemName.trim();
@@ -30,11 +36,13 @@ export async function submitRequest(itemName: string, amount: number | null, urg
 export async function editRequest(id: string, amount: number | null, urgent: boolean) {
   await requireProfile();
   const supabase = createClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("requests")
     .update({ amount: amount && amount > 0 ? amount : null, urgent })
-    .eq("id", id);
+    .eq("id", id)
+    .select("id");
   if (error) return { error: error.message };
+  if (!data?.length) return { error: NO_ROW };
 
   revalidatePath("/my-requests");
   revalidatePath("/requests");
@@ -47,15 +55,17 @@ export async function editRequest(id: string, amount: number | null, urgent: boo
 export async function requestAgain(id: string, amount: number | null, urgent: boolean) {
   await requireProfile();
   const supabase = createClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("requests")
     .update({
       amount: amount && amount > 0 ? amount : null,
       urgent,
       sent_at: new Date().toISOString(),
     })
-    .eq("id", id);
+    .eq("id", id)
+    .select("id");
   if (error) return { error: error.message };
+  if (!data?.length) return { error: NO_ROW };
 
   revalidatePath("/request");
   revalidatePath("/my-requests");
@@ -66,8 +76,13 @@ export async function requestAgain(id: string, amount: number | null, urgent: bo
 export async function deleteRequest(id: string) {
   await requireProfile();
   const supabase = createClient();
-  const { error } = await supabase.from("requests").delete().eq("id", id);
+  const { data, error } = await supabase
+    .from("requests")
+    .delete()
+    .eq("id", id)
+    .select("id");
   if (error) return { error: error.message };
+  if (!data?.length) return { error: NO_ROW };
 
   revalidatePath("/my-requests");
   revalidatePath("/requests");
@@ -89,11 +104,13 @@ export async function clearAllRequests() {
 export async function setRequestReminder(id: string, iso: string) {
   await requireProfile();
   const supabase = createClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("requests")
     .update({ reminder_at: iso, reminder_notified: false })
-    .eq("id", id);
+    .eq("id", id)
+    .select("id");
   if (error) return { error: error.message };
+  if (!data?.length) return { error: NO_ROW };
 
   revalidatePath("/my-requests");
   return { ok: true };
@@ -102,11 +119,13 @@ export async function setRequestReminder(id: string, iso: string) {
 export async function clearRequestReminder(id: string) {
   await requireProfile();
   const supabase = createClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("requests")
     .update({ reminder_at: null, reminder_notified: false })
-    .eq("id", id);
+    .eq("id", id)
+    .select("id");
   if (error) return { error: error.message };
+  if (!data?.length) return { error: NO_ROW };
 
   revalidatePath("/my-requests");
   return { ok: true };

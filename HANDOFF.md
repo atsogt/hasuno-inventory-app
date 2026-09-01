@@ -51,13 +51,18 @@ What's shipped beyond the original build brief:
 - **Dark mode** — full palette via CSS variables, toggle in the header, defaults to system preference.
 - **Background photos** — dark mode shows a moss/rock photo, light mode a sky/clouds photo, both full-bleed behind a flat, hard-edged `.content-scrim` glass layer.
 - **Requests screen grouped by requestor** — collapsible per-person sections (most recently active first) plus a Collapse all/Expand all toggle, instead of one flat newest-first list.
+- **Inline qty stepper on the Request screen** — tapping an item now opens an increment/decrement stepper in place, pre-filled from an existing open request if you have one, that auto-sends after a few seconds idle (or "Send now"/"Cancel"), replacing the old instant-send-then-separate-dialog flow for grid taps.
+- **Erase-all on Requests** — owner/manager get a "clear all" link that wipes every open request after a confirm.
+- **Reminder History** — a popup on Accounts → Remind listing every worker reminder ever sent, backed by its own `reminder_history` table so clearing history can't touch a live/scheduled reminder.
+- **Email fallback for reminders** — `send-reminders` now emails `profiles.email` via Resend (free tier) alongside every push notification, so a reminder still reaches someone who hasn't installed the PWA or has push disabled. Opt-in via `RESEND_API_KEY`/`RESEND_FROM_EMAIL`; no-ops if unset.
 - **A few real bugs caught along the way**: a critical Next.js CVE (patched via version bump), a hardcoded secret that almost got committed, a git repo that turned out to be rooted at the whole home directory instead of just this project, several paddings silently doing nothing because they used spacing classes (`p-5.5`, `pt-4.5`) that don't exist in Tailwind's default scale, a `body` background silently painting over the fixed `.aurora` backdrop so it (and later the background photos) never actually rendered, and a modal-trapped-in-`backdrop-filter` bug that recurred twice — a scrapped grouped Requests variant, then the new `.content-scrim` wrapper — fixed for good by rendering `Modal` through a React portal to `document.body` instead of relying on where it happens to sit in the DOM.
 
 Open items:
-1. **Swap in the official `logo.png`** if a real one ever arrives (`assets/logo.png` **and** `public/logo.png`, same filename).
-2. No in-app password reset yet — only via the Supabase dashboard.
-3. A leftover test item ("Good Job SOfia Item") is sitting in the live catalog from early testing.
-4. Decide later whether real SMS is worth leaving the free tier.
+1. **Push migration `0005_reminder_history.sql` to the live DB** (`npx supabase db push`) — Reminder History will error until this runs.
+2. **Swap in the official `logo.png`** if a real one ever arrives (`assets/logo.png` **and** `public/logo.png`, same filename).
+3. No in-app password reset yet — only via the Supabase dashboard.
+4. A leftover test item ("Good Job SOfia Item") is sitting in the live catalog from early testing.
+5. Decide later whether real SMS is worth leaving the free tier.
 
 ## Design system (keep consistent)
 

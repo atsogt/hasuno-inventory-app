@@ -1,5 +1,5 @@
 // Supabase Edge Function, invoked on a schedule by pg_cron (see supabase/migrations/0002_cron.sql).
-// Finds due reminders that haven't been pushed yet and sends Web Push notifications for them.
+// Finds due reminders that haven't been pushed yet and notifies via Web Push and email.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import webpush from "npm:web-push@3";
 
@@ -14,9 +14,12 @@ webpush.setVapidDetails(
   Deno.env.get("VAPID_PRIVATE_KEY")!
 );
 
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const RESEND_FROM_EMAIL = Deno.env.get("RESEND_FROM_EMAIL");
+
 type Subscription = { id: string; endpoint: string; p256dh: string; auth: string };
 
-async function sendToProfile(profileId: string, payload: unknown) {
+async function sendPush(profileId: string, payload: { title: string; body: string }) {
   const { data: subs } = await supabase
     .from("push_subscriptions")
     .select("id, endpoint, p256dh, auth")
@@ -42,6 +45,36 @@ async function sendToProfile(profileId: string, payload: unknown) {
   }
 }
 
+async function sendEmail(to: string, subject: string, body: string) {
+  if (!RESEND_API_KEY || !RESEND_FROM_EMAIL) return;
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ from: RESEND_FROM_EMAIL, to, subject, text: body }),
+    });
+    if (!res.ok) console.error("email failed", to, await res.text());
+  } catch (err) {
+    console.error("email failed", to, err);
+  }
+}
+
+async function notifyProfile(profileId: string, title: string, body: string) {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("email")
+    .eq("id", profileId)
+    .single();
+
+  await Promise.all([
+    sendPush(profileId, { title, body }),
+    profile?.email ? sendEmail(profile.email, title, body) : Promise.resolve(),
+  ]);
+}
+
 async function sendDueRequestReminders() {
   const { data: due } = await supabase
     .from("requests")
@@ -51,10 +84,7 @@ async function sendDueRequestReminders() {
     .lte("reminder_at", new Date().toISOString());
 
   for (const r of due || []) {
-    await sendToProfile(r.requested_by_id, {
-      title: "Reminder",
-      body: `${r.item_name} is due`,
-    });
+    await notifyProfile(r.requested_by_id, "Reminder", `${r.item_name} is due`);
     await supabase.from("requests").update({ reminder_notified: true }).eq("id", r.id);
   }
 }
@@ -69,10 +99,7 @@ async function sendDueStaffReminders() {
   for (const r of due || []) {
     const targets = (r.target_ids as string[]).filter((id) => !(r.dismissed_by as string[]).includes(id));
     for (const profileId of targets) {
-      await sendToProfile(profileId, {
-        title: `Reminder from ${r.created_by_name}`,
-        body: r.message,
-      });
+      await notifyProfile(profileId, `Reminder from ${r.created_by_name}`, r.message);
     }
     await supabase.from("staff_reminders").update({ pushed_at: new Date().toISOString() }).eq("id", r.id);
   }

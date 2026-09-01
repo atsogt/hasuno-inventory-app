@@ -26,7 +26,7 @@ export default async function RequestPage() {
 
   return (
     <>
-      <RealtimeRefresh tables={["staff_reminders", "items"]} />
+      <RealtimeRefresh tables={["requests", "staff_reminders", "items"]} />
       <RequestScreen
         items={(items || []) as Item[]}
         canManageCatalog={profile.role !== "worker"}
